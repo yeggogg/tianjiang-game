@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b1628%27/%3E%3Ctext x=%2732%27 y=%2745%27 text-anchor=%27middle%27 font-size=%2736%27%3E%F0%9F%96%90%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#07101c">
-<title>天降一掌 V2.4</title>
+<title>天降一掌 V2.5</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b1628%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2724%27 fill=%27none%27 stroke=%27%23ffd166%27 stroke-width=%274%27/%3E%3Ctext x=%2732%27 y=%2742%27 text-anchor=%27middle%27 font-size=%2730%27 font-weight=%27900%27 fill=%27%23ffd166%27%3E%E6%8E%8C%3C/text%3E%3C/svg%3E">
 <style>
 /* 《天降一掌》界面。手机竖屏优先，桌面居中。不用外部字体。 */
@@ -907,6 +908,15 @@ button:disabled {
   pointer-events: none; max-width: 90vw; text-align: center;
   box-shadow: 0 6px 20px rgba(0,0,0,0.45);
 }
+
+.c-grade-tip {
+  margin: 8px 0; padding: 9px 12px; border-radius: 10px;
+  background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.55);
+  color: #fde68a; font-size: 13px; font-weight: 700; text-align: left; line-height: 1.4;
+}
+.survival-split {
+  font-size: 12px; color: #9fd3c7; margin: 2px 0 6px;
+}
 </style>
 </head>
 <body>
@@ -925,7 +935,7 @@ button:disabled {
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var GAME_VERSION = 'V2.4';   /* 与策划案 V2.4 对应 */
+  var GAME_VERSION = 'V2.5';   /* 与策划案 V2.5 对应 */
 
   var CONFIG = {
     GAME_VERSION: GAME_VERSION,
@@ -936,10 +946,15 @@ button:disabled {
 
     /* V1.5：存档前缀与旧版本分开（file:// 下多个版本共用 localStorage，避免排行榜混在一起）。
      * V1.3 §14.4/§14.5 的存档规则沿用，仅版本前缀升级。 */
-    storagePrefix: 'tianjiang_v24_',
-    legacyPrefixes: ['tianjiang_v23_', 'tianjiang_v22_', 'tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
+    storagePrefix: 'tianjiang_v25_',
+    legacyPrefixes: ['tianjiang_v24_', 'tianjiang_v23_', 'tianjiang_v22_', 'tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
     /* V1.8 §15.2：5 个固定基准测试种子 */
     benchmarkSeeds: [10001, 20002, 30003, 40004, 50005],
+    /* V2.5：高频点击节流与弹窗确认防重入锁 */
+    input: {
+      minPointerIntervalMs: 50, // 待策划：建议值（输入节流上限 20Hz）
+      modalConfirmLock: true
+    },
     keys: {
       leaderboard: 'leaderboard',
       achievements: 'achievements',
@@ -1080,8 +1095,8 @@ button:disabled {
       bullseyeScoreBonus: 0.25,            // 待策划：建议值
       bullseyeEnergyBonus: 1,              // 待策划：建议值
       /* V2.4：满蓄力（三档≥0.80s）额外固定战斗分与能量 */
-      tier3ChargeScoreBonus: 150,          // 待策划：建议值
-      tier3ChargeEnergyBonus: 3,           // 待策划：建议值
+      tier3ChargeScoreBonus: 0,            // V2.5：移除满蓄固定+150分红利
+      tier3ChargeEnergyBonus: 0,           // V2.5：移除满蓄固定+3能量红利（统一走会心+1）
       /* V2.4：重击/神掌阻止分裂怪分裂时额外掉落能量 */
       splitSuppressEnergyBonus: 2,         // 待策划：建议值
       /* V2.4：神掌流派对精英与重甲额外伤害加成 */
@@ -1112,12 +1127,17 @@ button:disabled {
         { minKills: 12, bonus: 400 }
       ],
       survivalPerSec: 15,
+      clearBaseBonus: 1800,                // 待策划：建议值（V2.5 基础通关奖）
+      noLeakMaxBonus: 1000,                // 待策划：建议值（V2.5 完好防线奖上限）
+      leakPenaltyPerEnemy: 50,             // 待策划：建议值（V2.5 每漏1怪扣50分）
       complete120sBonus: 1000,
       skillRankPoints: 120,
       lv3SkillBonus: 250,
       activeSynergyPoints: 300,
-      challengeDonePoints: 400,
-      ultCastPoints: 120
+      challengeDonePoints: 350,            // 待策划：建议值（V2.5 限时挑战分）
+      ultCastPoints: 180,                  // 待策划：建议值（V2.5 神掌单次基础分 120→180）
+      godPalmEchoRadiusPerSkill: 0.15,     // 待策划：建议值（V2.5 每张神掌技能扩大余震15%）
+      godPalmKillEnergyRefundRatio: 0.20   // 待策划：建议值（V2.5 神掌直杀回复20%消耗能量）
     },
 
     palm: {
@@ -1150,7 +1170,9 @@ button:disabled {
       /* V2.4：改为三档快节奏蓄力（0.15 / 0.45 / 0.80s），支持按 palmRadius 倍率扩圈 */
       radiusMode: 'palm_mul',
       timeByTier: [0, 0.15, 0.45, 0.80],   // 待策划：建议值
-      damageByTier: [1, 1.2, 1.6, 2.5],    // 待策划：建议值
+      damageByTier: [1, 1.0, 1.6, 2.2],    // 待策划：建议值（V2.5 满蓄伤害2.5→2.2）
+      chargingMoveSpeedMult: 0.65,         // 待策划：建议值（V2.5 蓄力>0.25s移速降至65%）
+      tier3RecoveryCooldown: 0.78,         // 待策划：建议值（V2.5 满蓄释放后冷却延长至0.78s）
       tiers: [
         {
           level: 1,
@@ -1176,8 +1198,8 @@ button:disabled {
           level: 3,
           time: 0.80,                      // 待策划：建议值（满蓄 ≥0.80s，必中靶心+150分+3能量+防分裂）
           radius: 200,
-          radiusMul: 1.75,                 // 待策划：建议值
-          damage: 2.5,                     // 待策划：建议值
+          radiusMul: 1.55,                 // 待策划：建议值（V2.5 满蓄范围1.75→1.55）
+          damage: 2.2,                     // 待策划：建议值（V2.5 满蓄伤害2.5→2.2）
           stun: 0.35,
           knockback: 0,
           pull: 0.72
@@ -1541,7 +1563,9 @@ button:disabled {
       synergyMul: 1.85,
       ownedSkillBonus: 0.85, // 待策划：建议值（V2.4 强化核心技能追级）     // V1.8 §4.8 已拥有未满级技能权重加成
       sameSchoolBonus: 0.65, // 待策划：建议值（V2.4 强化同流派成型，最高3层）
-      fillerWeightMul: 0.55, // 待策划：建议值（V2.4 压低4张通用填充卡权重）
+      earlyGuaranteeLevels: 3, // V2.5：前3次升级覆盖五大流派核心卡，完全屏蔽填充卡
+      fillerWeightMul: 0.35, // 待策划：建议值（V2.5 4级后填充卡基础权重降至35%）
+      cardDescMaxChars: 14, // V2.5：卡面正面效果严格限14字以内
       repeatPenalty: 0.25, // 待策划：建议值（V2.4 上轮未选卡权重×0.25）
       freeRerollsPerRun: 1, // 待策划：建议值（V2.4 每局免费刷新次数）     // V1.8 §4.8 同流派每张已拥有技能加成
       maxSchoolStack: 3,         // V1.8 §4.8 同流派叠加层数上限（最高 +1.20）
@@ -1678,7 +1702,7 @@ button:disabled {
           /* V1.5 §6.2 技能 D【建议初值待测】：一级 2、二级 3、三级 4 个目标（含首个目标）。 */
           jumpTargets: [3, 5, 7], // 待策划：建议值（V2.4 闪电链基础跳数增强）
           /* V2.4：衰减系数由 0.45/0.75 提升至 0.88 */
-          jumpDamageFalloff: 0.88, // 待策划：建议值
+          jumpDamageFalloff: 0.95, // 待策划：建议值（V2.5 闪电链衰减 0.88→0.95）
           jumpDamageFalloffMin: 0.4,
           jumpDamageFalloffMax: 0.5,
           forkCount: 2,
@@ -1689,7 +1713,8 @@ button:disabled {
         },
         mark: {
           /* V1.5 §6.2 技能 E：三级回响最多一次；二级可传播 1 名。 */
-          markSpread: 1,
+          markSpread: 2, // 待策划：建议值（V2.5 雷印死亡必爆并向周围2名敌人传递）
+          triggerChanceByRank: [0.45, 0.65, 0.85], // 待策划：建议值
           echoLimit: 1,
           /* 雷印爆炸/回响伤害均为任务实现默认，待策划确认。 */
           burstDamageMul: 1,
@@ -2960,31 +2985,31 @@ button:disabled {
       list: [
         {
           id: 'c_combo', name: '连斩试炼', type: 'kills',
-          desc: '12 秒内击杀 10 只敌人',
+          desc: '12秒杀10怪',
           duration: 12, goal: 10, needCombo: 0,                  // 待策划：建议值（V1.9 §6.2）
           rewardScore: 0, rewardXp: 8, rewardEnergy: 6           // 待策划：建议值（V1.9 §6.3 第1次）
         },
         {
           id: 'c_break', name: '破阵挑战', type: 'kills',
-          desc: '14 秒内击杀 14 只敌人',
+          desc: '14秒杀14怪',
           duration: 14, goal: 14, needCombo: 0,                  // 待策划：建议值（V1.9 §6.2）
           rewardScore: 0, rewardXp: 12, rewardEnergy: 8          // 待策划：建议值（V1.9 §6.3 第2次）
         },
         {
           id: 'c_ult', name: '神掌震慑', type: 'ultCast',
-          desc: '14 秒内主动释放 1 次神掌',
+          desc: '14秒放1次神掌',
           duration: 14, goal: 1, needCombo: 0,                   // 待策划：建议值（低能量时自动替换为击杀目标）
           rewardScore: 0, rewardXp: 12, rewardEnergy: 8,         // 待策划：建议值（V1.9 §6.3 第3次）
           fallback: {
             id: 'c_ult_fallback', name: '势如破竹', type: 'kills',
-            desc: '14 秒内击杀 14 只敌人',
+            desc: '14秒杀14怪',
             duration: 14, goal: 14, needCombo: 0,
             rewardScore: 0, rewardXp: 12, rewardEnergy: 8
           }
         },
         {
           id: 'c_endgame', name: '终局狂潮', type: 'kills',
-          desc: '14 秒内击杀 18 只敌人',
+          desc: '14秒杀18怪',
           duration: 14, goal: 18, needCombo: 0,                  // 待策划：建议值（V1.9 §6.2 102s终局冲刺）
           rewardScore: 0, rewardXp: 15, rewardEnergy: 10         // 待策划：建议值（V1.9 §6.3 第4次）
         }
@@ -3978,6 +4003,7 @@ button:disabled {
       huiliuCount: 0,
       lastOfferKey: '',
       lastOfferedSkillIds: [],
+      earlyOfferedSchools: {},
       freeRerollsLeft: (cfg.skills && cfg.skills.freeRerollsPerRun != null) ? cfg.skills.freeRerollsPerRun : 1,
       comboMilestoneHit: {},
       bullseyeCount: 0,
@@ -5825,7 +5851,8 @@ button:disabled {
             c.used[target.id] = 1;
           }
         }
-        var r = state.palmRadius * (gc.echoRadiusMul || 1);
+        var _godR = 1 + schoolOwned('神掌爆发') * ((cfg.scoring && cfg.scoring.godPalmEchoRadiusPerSkill) || 0.15);
+        var r = state.palmRadius * (gc.echoRadiusMul || 1) * _godR;
         var dmg = v15Base() * (gc.echoDamageMul || 1);
         v15Deal(c.action, 'godEcho', tx, ty, r, dmg,
           { noFrost: true, noShatter: true, noSpikes: true, godKill: true });
@@ -7033,7 +7060,9 @@ button:disabled {
       var w = s.weight * qw * pm;
       /* V2.4：强化已拥有/同流派权重，压低通用填充卡权重，对上轮未选卡施加 ×0.25 惩罚 */
       if (!s.school || s.school === '通用') {
-        w *= (cfg.skills.fillerWeightMul != null ? cfg.skills.fillerWeightMul : 0.55);
+        var _earlyLv = (cfg.skills && cfg.skills.earlyGuaranteeLevels) || 3;
+        if ((state.picks ? state.picks.length : 0) < _earlyLv) return 0;
+        w *= (cfg.skills.fillerWeightMul != null ? cfg.skills.fillerWeightMul : 0.35);
       }
       var _nSch = (s.school && s.school !== '通用') ? schoolOwned(s.school) : 0;
       var _wOwned = rank > 0 ? (cfg.skills.ownedSkillBonus != null ? cfg.skills.ownedSkillBonus : 0.85) : 0;
@@ -7134,46 +7163,84 @@ button:disabled {
     function offerKey(out) {
       return out.map(function (c) { return c.id; }).sort().join('|');
     }
-    function rollFirstUpgradeCore(n) {
-      /* V2.4：首次升级必出 3 张不同主流派的核心起始技（排除通用填充卡） */
+    function rollEarlyGuarantee(n) {
+      /* V2.5：前 3 次升级（Lv2/3/4）完全屏蔽填充卡，并优先覆盖尚未出现过的五大流派核心入门卡 */
       var list = cfg.skills.list || [];
       var bySchool = {};
-      var schools = [];
+      var unseenSchools = [];
+      var seenSchools = [];
       for (var i = 0; i < list.length; i++) {
         var s = list[i];
         if (!s.school || s.school === '通用') continue;
-        if (s.skillTypeKey !== 'core') continue;
         if (!prereqOk(s) || (state.skillRanks[s.id] || 0) >= s.maxRank) continue;
-        if (!bySchool[s.school]) { bySchool[s.school] = []; schools.push(s.school); }
+        /* 前3级优先核心入门卡 */
+        if (s.skillTypeKey !== 'core' && (state.picks ? state.picks.length : 0) === 0) continue;
+        if (!bySchool[s.school]) {
+          bySchool[s.school] = [];
+          if (state.earlyOfferedSchools && state.earlyOfferedSchools[s.school]) seenSchools.push(s.school);
+          else unseenSchools.push(s.school);
+        }
         bySchool[s.school].push(s);
       }
       var out = [];
-      var usedSch = {};
-      while (out.length < n && schools.length > 0) {
-        var pickIdx = Math.floor(rngSkill() * schools.length);
-        var sch = schools.splice(pickIdx, 1)[0];
-        if (usedSch[sch]) continue;
-        usedSch[sch] = true;
-        var arr = bySchool[sch];
-        var chosen = arr[Math.floor(rngSkill() * arr.length)];
+      var usedIds = {};
+      var pickFromSchool = function (sch) {
+        var arr = bySchool[sch] || [];
+        var cores = [];
+        for (var j = 0; j < arr.length; j++) if (!usedIds[arr[j].id] && arr[j].skillTypeKey === 'core') cores.push(arr[j]);
+        var pool = cores.length ? cores : arr.filter(function (x) { return !usedIds[x.id]; });
+        if (!pool.length) return false;
+        var chosen = pool[Math.floor(rngSkill() * pool.length)];
+        usedIds[chosen.id] = 1;
         out.push(presentSkill(chosen));
+        return true;
+      };
+      while (out.length < n && unseenSchools.length > 0) {
+        var ui = Math.floor(rngSkill() * unseenSchools.length);
+        pickFromSchool(unseenSchools.splice(ui, 1)[0]);
+      }
+      while (out.length < n && seenSchools.length > 0) {
+        var si = Math.floor(rngSkill() * seenSchools.length);
+        pickFromSchool(seenSchools.splice(si, 1)[0]);
       }
       return out;
     }
-    function rollSkills(n) {
-      var out;
-      if ((!state.picks || state.picks.length === 0) && !state._usedFirstGuarantee) {
-        out = rollFirstUpgradeCore(n);
-        if (out.length < n) out = rollSkillsOnce(n);
-      } else {
-        out = rollSkillsOnce(n);
+    function dedupeOffer(out, n) {
+      var seen = {};
+      var clean = [];
+      for (var i = 0; i < out.length; i++) {
+        if (!out[i] || seen[out[i].id]) continue;
+        seen[out[i].id] = 1;
+        clean.push(out[i]);
       }
-      /* V2.4：避免和上一次三选一完全相同 */
+      if (clean.length < n) {
+        var list = cfg.skills.list || [];
+        for (var j = 0; j < list.length && clean.length < n; j++) {
+          var s = list[j];
+          if (seen[s.id] || !prereqOk(s) || (state.skillRanks[s.id] || 0) >= s.maxRank) continue;
+          if ((state.picks ? state.picks.length : 0) < ((cfg.skills && cfg.skills.earlyGuaranteeLevels) || 3) && (!s.school || s.school === '通用')) continue;
+          seen[s.id] = 1;
+          clean.push(presentSkill(s));
+        }
+      }
+      return clean;
+    }
+    function rollSkills(n) {
+      var earlyLim = (cfg.skills && cfg.skills.earlyGuaranteeLevels) || 3;
+      var inEarly = (state.picks ? state.picks.length : 0) < earlyLim;
+      var out = inEarly ? rollEarlyGuarantee(n) : rollSkillsOnce(n);
+      if (out.length < n) out = dedupeOffer(out.concat(rollSkillsOnce(n)), n);
+      else out = dedupeOffer(out, n);
       if (cfg.skills.avoidRepeatOffer && out.length) {
         var tries = 0;
         while (offerKey(out) === state.lastOfferKey && tries++ < 8) {
-          out = ((!state.picks || state.picks.length === 0) && !state._usedFirstGuarantee) ? rollFirstUpgradeCore(n) : rollSkillsOnce(n);
+          out = inEarly ? rollEarlyGuarantee(n) : rollSkillsOnce(n);
+          out = dedupeOffer(out, n);
         }
+      }
+      if (!state.earlyOfferedSchools) state.earlyOfferedSchools = {};
+      for (var ei = 0; ei < out.length; ei++) {
+        if (out[ei] && out[ei].school && out[ei].school !== '通用') state.earlyOfferedSchools[out[ei].school] = 1;
       }
       /* V1.2 §9.16：技能池不够三张时用通用强化补位 */
       var fb = cfg.skills.fallback || [];
@@ -8279,6 +8346,18 @@ button:disabled {
         }
       }
 
+      /* V2.5：带雷霆印记的敌人死亡时必定触发范围感电爆炸并向周围最多 2 名敌人传递印记 */
+      if (enemy.mark && v15Rank('E') >= 1) {
+        v15TriggerMark(enemy, enemy.x, enemy.y, atk && atk.action);
+        var _noSelfM = {}; _noSelfM[enemy.id] = 1;
+        var _spreadMax = (v15Cfg().mark && v15Cfg().mark.markSpread) || 2;
+        for (var _sm = 0; _sm < _spreadMax; _sm++) {
+          var _nearM = v15Nearest(enemy.x, enemy.y, state.palmRadius * 1.15, _noSelfM, false);
+          if (!_nearM) break;
+          _noSelfM[_nearM.id] = 1;
+          v15ApplyMark(_nearM);
+        }
+      }
       var _suppressSplit = !!(atk && ((atk.kind === 'charge' && atk.tier >= 2) || atk.kind === 'ultimate' || atk.kind === 'ult-wave' || atk.godKill));
       if (enemy.splitInto > 0 && _suppressSplit) {
         state.splitSuppressedCount = (state.splitSuppressedCount || 0) + 1;
@@ -8301,6 +8380,13 @@ button:disabled {
         atk.action.kills += 1;
         if (atk.action.kind === 'ultimate') {
           state.ultKills += 1;
+          /* V2.5：神掌流派技能每拥有1张，神掌直接击杀敌人时回复20%消耗能量（每次神掌最多触发1次×拥有神掌技能数） */
+          var _godOwned = schoolOwned('神掌爆发');
+          if (_godOwned > 0 && (atk.action.godRefunds || 0) < _godOwned) {
+            atk.action.godRefunds = (atk.action.godRefunds || 0) + 1;
+            var _refRatio = (cfg.scoring && cfg.scoring.godPalmKillEnergyRefundRatio) || 0.20;
+            addEnergy(Math.round(ultCost() * _refRatio));
+          }
           if (atk.action.kills > state.maxUltKills) state.maxUltKills = atk.action.kills;
           tryUnlock('ultClean');
         } else {
@@ -8717,7 +8803,7 @@ button:disabled {
     function fireCharge(x, y, idx) {
       var tier = cfg.charge.tiers[idx];
       if (state.chargeTiers[idx] != null) state.chargeTiers[idx] += 1;
-      state.palmCd = cfg.charge.recovery;
+      state.palmCd = (tier.level >= 3 && cfg.charge.tier3RecoveryCooldown) ? cfg.charge.tier3RecoveryCooldown : cfg.charge.recovery;
       sfx('charge');
       vib(cfg.feedback.vibrateCharge);
       dealAttack({
@@ -9455,8 +9541,14 @@ button:disabled {
       var sc = cfg.scoring || {};
       var combatPart = Math.floor(state.combatScore || 0);
       var completed120s = state.time >= (cfg.duration || 120) - cfg.time.eps;
-      var survPart = Math.floor(state.time * (sc.survivalPerSec || 15)) +
-        (completed120s ? (sc.complete120sBonus || 1000) : 0);
+      var clearBase = completed120s
+        ? (sc.clearBaseBonus != null ? sc.clearBaseBonus : 1800)
+        : Math.floor(state.time * (sc.survivalPerSec || 15));
+      var leakPenalty = (state.escaped || 0) * (sc.leakPenaltyPerEnemy != null ? sc.leakPenaltyPerEnemy : 50);
+      var defenseBonus = completed120s
+        ? Math.max(0, (sc.noLeakMaxBonus != null ? sc.noLeakMaxBonus : 1000) - leakPenalty)
+        : 0;
+      var survPart = clearBase + defenseBonus;
 
       var skillRanksSum = 0, lv3Count = 0, activeSynergies = 0, sid;
       for (sid in state.skillRanks) {
@@ -9503,6 +9595,9 @@ button:disabled {
       return {
         combat: combatPart,
         survival: survPart,
+        clearBase: clearBase,
+        defenseBonus: defenseBonus,
+        escaped: state.escaped || 0,
         survivalKill: combatPart + survPart,
         build: buildPart,
         masteryScore: masteryScore,
@@ -10223,7 +10318,7 @@ button:disabled {
       activePointer = null;
       ultPointer = false;
       paused = true;
-      showPanel('pause');
+      renderPauseExtra(); showPanel('pause');
     });
     shell.appendChild(btnPause);
 
@@ -10375,16 +10470,28 @@ button:disabled {
       }
     });
     nodes.upReroll.classList.add('reroll-btn');
+    var isConfirmingUpgrade = false;
     nodes.upOk = addBtn(p._actions, '先选一项', false, function () {
+      if (isConfirmingUpgrade) return;
       if (!game || game.state.status !== 'upgrade' || upSel < 0 || modalGuardActive()) return;
+      isConfirmingUpgrade = true;
+      nodes.upOk.disabled = true;
+      if (panels.upgrade) panels.upgrade.style.pointerEvents = 'none';
       var i = upSel;
       var choice = game.state.upgradeChoices[i];
       var first = choice && !(game.state.skillRanks[choice.id] > 0);
       upSel = -1;
-      game.chooseUpgrade(i);
-      if (first && game.state.skillRanks[choice.id] > 0) addFx({ kind: 'sk_learn', text: choice.name, life: 0.8, max: 0.8 });
-      shownUpgradeKey = '';
-      syncOverlay();
+      try {
+        game.chooseUpgrade(i);
+        if (first && game.state.skillRanks[choice.id] > 0) addFx({ kind: 'sk_learn', text: choice.name, life: 0.8, max: 0.8 });
+        shownUpgradeKey = '';
+        syncOverlay();
+      } finally {
+        setTimeout(function () {
+          isConfirmingUpgrade = false;
+          if (panels.upgrade) panels.upgrade.style.pointerEvents = '';
+        }, 120);
+      }
     });
     nodes.upOk.id = 'upOk';
     nodes.upOk.disabled = true;
@@ -10751,6 +10858,10 @@ button:disabled {
   function panelPause() {
     var p = makeDockPanel('已暂停');
     p._body.appendChild(el('p', 'help', '计时、刷怪和事件都已暂停，蓄力已取消。点「继续」回到战场。'));
+    nodes.pauseMuteBtn = makeToggleRow('游戏音效与配乐', function () { toggleMute(); renderPauseExtra(); });
+    p._body.appendChild(nodes.pauseMuteBtn);
+    nodes.pauseMastery = el('div', 'mastery-tags');
+    p._body.appendChild(nodes.pauseMastery);
     addBtn(p._actions, '继续', false, function () {
       paused = false;
       lastTs = performance.now();
@@ -10867,6 +10978,23 @@ button:disabled {
     if (platform.audio && platform.audio.setMuted) platform.audio.setMuted(next);
     try { platform.storage.setItem(muteKey, next ? '1' : '0'); } catch (e) {}
     renderSettings();
+  }
+
+  function renderPauseExtra() {
+    var muted = platform.audio && platform.audio.isMuted && platform.audio.isMuted();
+    if (nodes.pauseMuteBtn && nodes.pauseMuteBtn._pill) {
+      nodes.pauseMuteBtn._pill.textContent = muted ? '○ 关' : '● 开';
+      nodes.pauseMuteBtn._pill.classList.toggle('is-on', !muted);
+    }
+    if (nodes.pauseMastery && game && game.getSchoolMasteryMap) {
+      nodes.pauseMastery.textContent = '';
+      var mp = game.getSchoolMasteryMap();
+      for (var ms in mp) {
+        if (Object.prototype.hasOwnProperty.call(mp, ms)) {
+          nodes.pauseMastery.appendChild(el('span', 'mastery-tag', mp[ms].school + '·' + mp[ms].label + ' (+' + mp[ms].score + ')'));
+        }
+      }
+    }
   }
 
   function renderSettings() {
@@ -11914,8 +12042,20 @@ button:disabled {
     gMeta.appendChild(el('p', 'grade-target', targetParts.join(' · ')));
     hero.appendChild(gMeta);
     box.appendChild(hero);
+    if (gLetter === 'C') {
+      var cTip = '提示：尽量保持连续命中不打空，高连击能大幅拉高综合分！';
+      var chT = (game && game.state && game.state.chargeTiers) || [0, 0, 0];
+      var heavyCharges = (chT[1] || 0) + (chT[2] || 0);
+      if ((res.ultimates || 0) < 4) cTip = '提示：右下角【神掌】亮起后记得及时点击清屏！';
+      else if (heavyCharges < 3) cTip = '提示：怪多时按住屏幕蓄力（0.8秒满蓄），范围更大！';
+      else if ((res.accuracy || 0) < 0.55) cTip = '提示：落掌打空会中断连杀，瞄准怪群中心再拍下！';
+      box.appendChild(el('div', 'c-grade-tip', cTip));
+    }
     if (res.scoreBreakdown) {
-      box.appendChild(el('p', 'score-break', '评分明细：连击多杀 ' + fmt(bd.combat) + ' + 生存通关 ' + fmt(bd.survival) + ' + Build ' + fmt(bd.build) + ' + 挑战 ' + fmt(bd.mission) + ' + 神掌 ' + fmt(bd.ultimate)));
+      var _cb = bd.clearBase != null ? bd.clearBase : bd.survival;
+      var _db = bd.defenseBonus != null ? bd.defenseBonus : 0;
+      box.appendChild(el('p', 'score-break', '评分明细：连击多杀 ' + fmt(bd.combat) + ' + 通关防线 ' + fmt(bd.survival) + ' + Build ' + fmt(bd.build) + ' + 挑战 ' + fmt(bd.mission) + ' + 神掌 ' + fmt(bd.ultimate)));
+      box.appendChild(el('p', 'survival-split', '通关拆解：基础通关奖 ' + fmt(_cb) + ' + 完好防线奖 ' + fmt(_db) + '（漏怪 ' + (bd.escaped || 0) + ' 只）'));
       if (bd.masteries && bd.masteries.length) {
         var mWrap = el('div', 'mastery-tags');
         for (var mi = 0; mi < bd.masteries.length; mi++) {
@@ -12074,11 +12214,31 @@ button:disabled {
         if (_head) _head.appendChild(el('span', 'school-boost-tag', '同流派加成'));
       }
     }
-    /* V2.4：极简技能卡面——保留流派标、技能名与一句精炼中文描述，去掉冗余前置行 */
-    var mainTxt = ch.nextMechanic || ch.rankDesc || ch.description || ch.desc || '';
-    var colonIdx = mainTxt.indexOf('：');
-    if (colonIdx > 0 && colonIdx <= 10) mainTxt = mainTxt.slice(colonIdx + 1);
-    if (mainTxt.length > 44) mainTxt = mainTxt.slice(0, 43) + '…';
+    /* V2.5：卡面一句话精简至 14 字以内，杜绝截断 */
+    var SHORT_CARD_DESC = {
+      A: '落掌概率生成黑洞牵引敌群',
+      B: '黑洞结束触发范围聚爆冲击',
+      C: '黑洞牵引满载引发万掌崩裂',
+      D: '落掌触发多段闪电链连锁电击',
+      E: '命中附加雷印死亡爆裂并传染',
+      F: '雷电连续触发降下天雷轰击',
+      G: '落掌点燃敌人持续灼烧蔓延',
+      H: '灼烧目标受击触发烈焰爆裂',
+      I: '持续灼烧在地面形成烈焰火海',
+      J: '落掌寒气冻结敌人并减速控场',
+      K: '冻结目标受击升起范围冰棱刺',
+      L: '寒冰扩散形成极寒领域冰封敌潮',
+      M: '神掌释放后追加金色掌印残影',
+      N: '神掌余震扩大并联动追击敌群',
+      O: '神掌爆发降临重创精英与重甲',
+      P: '落掌后原位生成延迟残影追击',
+      Q: '落掌震裂地面引发持续余震',
+      R: '敌群密集时落掌自动追加反击',
+      S: '掌风向外回旋扫荡周围敌人'
+    };
+    var maxC = (CONFIG.skills && CONFIG.skills.cardDescMaxChars) || 14;
+    var mainTxt = SHORT_CARD_DESC[ch.id] || ch.nextMechanic || ch.rankDesc || ch.description || ch.desc || '';
+    if (mainTxt.length > maxC) mainTxt = mainTxt.slice(0, maxC);
     b.appendChild(el('span', 'desc', mainTxt));
     b.setAttribute('aria-pressed', 'false');
     b.addEventListener('click', function () {
@@ -12184,7 +12344,12 @@ button:disabled {
     return !!game.useUltimate();
   }
 
+  var lastInputTs = 0;
   function onPointerDown(e) {
+    var _nowIn = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    var _minGap = (CONFIG.input && CONFIG.input.minPointerIntervalMs) || 50;
+    if (_nowIn - lastInputTs < _minGap && game && game.state && game.state.palmCd > 0) return;
+    lastInputTs = _nowIn;
     if (e.button === 2) return;
     if (e.button != null && e.button !== 0) return;
     if (activePointer != null) return;
@@ -14828,6 +14993,7 @@ button:disabled {
   }
 
   function drawSkills() {
+    /* V2.5 UI-01：底栏技能单行横向紧凑徽章布局（仅流派色标图标 + Lv.X，绝不折行） */
     var map = game.state.skillRanks || {};
     var list = CONFIG.skills.list;
     var owned = [];
@@ -14836,50 +15002,45 @@ button:disabled {
       var rank = map[list[i].id] || 0;
       if (rank > 0) owned.push({ name: list[i].name, rank: rank, schoolKey: schoolKeyOf(list[i]), icon: skillIconOf(list[i]) });
     }
-    var slots = 6;
-    var show = owned.length > slots ? slots - 1 : owned.length;
-    var baseY = PB + L.skillTop;
-    var cw = 124;
-    var step = 132;
-    function slotXY(k) {
-      return { x: 16 + (k % 3) * step, y: baseY + Math.floor(k / 3) * (L.skillH + L.skillGap) };
-    }
+    var maxW = (ULT.x - ULT.r - 20) - 16;
+    var bw = 54, bh = 54, gap = 8;
+    var maxSlots = Math.max(4, Math.floor((maxW + gap) / (bw + gap)));
+    var show = owned.length > maxSlots ? maxSlots - 1 : owned.length;
+    var baseY = PB + L.skillTop + 6;
     ctx.textBaseline = 'middle';
     for (i = 0; i < show; i++) {
-      var q = slotXY(i);
+      var bx = 16 + i * (bw + gap);
       var meta = SCHOOL_META[owned[i].schoolKey] || SCHOOL_META.general;
-      roundRect(q.x, q.y, cw, L.skillH, 12, 'rgba(26, 44, 68, 0.95)');
-      /* V1.5 §12.2：底栏技能标签也按流派上色，并带技能图标。 */
-      roundRect(q.x, q.y, 5, L.skillH, 2, meta.color);
-      ctx.fillStyle = meta.color;
+      roundRect(bx, baseY, bw, bh, 12, 'rgba(20, 36, 56, 0.94)');
+      ctx.strokeStyle = meta.color;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.arc(q.x + 22, q.y + L.skillH / 2, 9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#102033';
-      ctx.font = font(13, 900);
-      ctx.textAlign = 'center';
-      ctx.fillText(owned[i].icon, q.x + 22, q.y + L.skillH / 2 + 1);
+      ctx.roundRect ? ctx.roundRect(bx + 1, baseY + 1, bw - 2, bh - 2, 11) : ctx.rect(bx + 1, baseY + 1, bw - 2, bh - 2);
+      ctx.stroke();
       ctx.fillStyle = meta.color;
-      ctx.font = font(22, 800);
-      ctx.textAlign = 'left';
-      ctx.fillText(fitText(shortName(owned[i].name) + ' ' + owned[i].rank, cw - 42), q.x + 38, q.y + L.skillH / 2 + 1);
-      mark('技能标签', q.x, q.y, cw, L.skillH);
+      ctx.font = font(20, 900);
+      ctx.textAlign = 'center';
+      ctx.fillText(owned[i].icon, bx + bw / 2, baseY + 20);
+      ctx.fillStyle = '#e8f4ff';
+      ctx.font = font(14, 800);
+      ctx.fillText('Lv.' + owned[i].rank, bx + bw / 2, baseY + 41);
+      mark('技能标签', bx, baseY, bw, bh);
     }
     if (owned.length > show) {
-      var m = slotXY(show);
-      roundRect(m.x, m.y, cw, L.skillH, 12, 'rgba(26, 44, 68, 0.95)');
+      var mx = 16 + show * (bw + gap);
+      roundRect(mx, baseY, bw, bh, 12, 'rgba(26, 44, 68, 0.95)');
       ctx.fillStyle = '#d5e4f2';
-      ctx.font = font(26, 800);
+      ctx.font = font(20, 900);
       ctx.textAlign = 'center';
-      ctx.fillText('+' + (owned.length - show), m.x + cw / 2, m.y + L.skillH / 2 + 1);
-      mark('技能更多', m.x, m.y, cw, L.skillH);
+      ctx.fillText('+' + (owned.length - show), mx + bw / 2, baseY + bh / 2);
+      mark('技能更多', mx, baseY, bw, bh);
     }
     if (!owned.length) {
       ctx.fillStyle = '#6f879f';
-      ctx.font = font(24, 700);
+      ctx.font = font(22, 700);
       ctx.textAlign = 'left';
-      ctx.fillText('升级后技能显示在这里', 20, baseY + L.skillH / 2);
-      mark('技能占位', 16, baseY, 380, L.skillH);
+      ctx.fillText('升级后技能显示在这里', 20, baseY + bh / 2);
+      mark('技能占位', 16, baseY, 320, bh);
     }
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
@@ -15058,7 +15219,7 @@ button:disabled {
     var ch = game.state.challenge;
     if (ch && ch.status === 'active') {
       if (rows.length >= 2) rows.pop();
-      rows.push({ title: '挑战·' + (ch.name || ''), sub: (ch.desc || '') + ' ' + (ch.progress || 0) + '/' + (ch.goal || 0) + ' · ' + Math.ceil(ch.timeLeft || 0) + '秒', color: '#b6f5c2' });
+      rows.push({ title: (ch.desc || ch.name || '限时挑战'), sub: (ch.progress || 0) + '/' + (ch.goal || 0) + ' · ' + Math.ceil(ch.timeLeft || 0) + 's' + (ch.rewardEnergy ? ('  ⚡+' + ch.rewardEnergy) : ''), color: '#b6f5c2' });
     }
     var i;
     var x = 16;
