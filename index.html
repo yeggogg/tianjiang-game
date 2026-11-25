@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#07101c">
-<title>天降一掌 V2.2</title>
+<title>天降一掌 V2.4</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b1628%27/%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2724%27 fill=%27none%27 stroke=%27%23ffd166%27 stroke-width=%274%27/%3E%3Ctext x=%2732%27 y=%2742%27 text-anchor=%27middle%27 font-size=%2730%27 font-weight=%27900%27 fill=%27%23ffd166%27%3E%E6%8E%8C%3C/text%3E%3C/svg%3E">
 <style>
 /* 《天降一掌》界面。手机竖屏优先，桌面居中。不用外部字体。 */
 :root {
@@ -844,6 +845,68 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 
+
+/* ===== V2.4 UI & Layout Enhancements ===== */
+.panel { z-index: 20; }
+.panel.panel-settings { z-index: 40; }
+.panel.panel-end { display: flex; flex-direction: column; max-height: 92dvh; }
+.panel.panel-end .panel-body { flex: 1 1 auto; overflow-y: auto; padding-bottom: 8px; }
+.panel.panel-end .panel-actions {
+  position: sticky; bottom: 0; z-index: 5;
+  background: linear-gradient(180deg, rgba(20,40,61,0.88), rgba(14,28,44,0.98));
+  padding-top: 10px; border-top: 1px solid rgba(130,168,204,0.35);
+}
+.grade-hero {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  background: linear-gradient(135deg, rgba(255,209,102,0.14), rgba(16,32,52,0.8));
+  border: 1px solid rgba(255,209,102,0.38); border-radius: 14px;
+  padding: 10px 14px; margin: 6px 0 8px;
+}
+.grade-badge {
+  width: 54px; height: 54px; border-radius: 14px; flex: 0 0 54px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 900; letter-spacing: 1px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.grade-S { background: linear-gradient(135deg, #ffe066, #ff922b); color: #1a1004; }
+.grade-A { background: linear-gradient(135deg, #c084fc, #7c3aed); color: #fff; }
+.grade-B { background: linear-gradient(135deg, #60a5fa, #2563eb); color: #fff; }
+.grade-C { background: linear-gradient(135deg, #94a3b8, #475569); color: #fff; }
+.grade-meta { text-align: left; }
+.grade-meta .score-big { margin: 0; font-size: 26px; line-height: 1.15; }
+.grade-target { margin: 3px 0 0; font-size: 12px; color: #b9d4ee; }
+.mastery-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.mastery-tag {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,209,102,0.16); border: 1px solid rgba(255,209,102,0.5); color: #ffe09a;
+}
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 10px 14px; margin-bottom: 10px;
+  background: rgba(12, 24, 39, 0.75); border: 1px solid rgba(130,168,204,0.35);
+  border-radius: 12px; color: #e8f1fa; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.toggle-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800;
+  background: rgba(148,163,184,0.22); color: #9fb4c9; border: 1px solid rgba(148,163,184,0.4);
+  transition: background 0.15s, color 0.15s;
+}
+.toggle-pill.is-on {
+  background: rgba(74, 222, 128, 0.22); color: #86efac; border-color: rgba(74, 222, 128, 0.6);
+}
+.reroll-btn {
+  margin-right: 8px; background: rgba(56, 189, 248, 0.16) !important;
+  border: 1px solid rgba(125, 211, 252, 0.55) !important; color: #bae6fd !important;
+}
+.reroll-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.onboard-tip {
+  position: fixed; left: 50%; top: 15%; transform: translateX(-50%); z-index: 15;
+  background: rgba(12, 24, 40, 0.9); border: 1px solid rgba(255,209,102,0.65);
+  border-radius: 12px; padding: 8px 14px; color: #fff3d1; font-size: 13px; font-weight: 700;
+  pointer-events: none; max-width: 90vw; text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+}
 </style>
 </head>
 <body>
@@ -862,7 +925,7 @@ button:disabled {
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var GAME_VERSION = 'V2.2';   /* 与策划案 V2.2 对应 */
+  var GAME_VERSION = 'V2.4';   /* 与策划案 V2.4 对应 */
 
   var CONFIG = {
     GAME_VERSION: GAME_VERSION,
@@ -873,8 +936,8 @@ button:disabled {
 
     /* V1.5：存档前缀与旧版本分开（file:// 下多个版本共用 localStorage，避免排行榜混在一起）。
      * V1.3 §14.4/§14.5 的存档规则沿用，仅版本前缀升级。 */
-    storagePrefix: 'tianjiang_v22_',
-    legacyPrefixes: ['tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
+    storagePrefix: 'tianjiang_v24_',
+    legacyPrefixes: ['tianjiang_v23_', 'tianjiang_v22_', 'tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
     /* V1.8 §15.2：5 个固定基准测试种子 */
     benchmarkSeeds: [10001, 20002, 30003, 40004, 50005],
     keys: {
@@ -990,19 +1053,56 @@ button:disabled {
 
     /* V2.1 §2.3 / §2.4 / §13.2 / §17：综合评分双加成（连击倍率 + 单次多杀加分）与防空放断连配置 */
     scoring: {
-      enemyBasePoints: { normal: 10, fast: 10, slow: 10, heavy: 25, armor: 25, special: 25, split: 25, dodge: 25, gold: 25, elite: 80, endgame: 20 }, // 待策划：建议值
+      /* V2.4：抬高重甲/分裂(35)与精英(150)基础分，补偿神掌爆发与高难击杀收益 */
+      enemyBasePoints: { normal: 10, fast: 10, slow: 10, heavy: 35, armor: 35, special: 35, split: 35, dodge: 10, gold: 35, elite: 150, endgame: 25 }, // 待策划：建议值
       comboTimeout: 3.0,                   // 待策划：建议值（击杀间隔超时重置）
       comboResetOnHit: false,              // V2.1 正式规则：玩家受击扣血不重置连击
       comboResetOnWhiff: true,             // V2.1 正式规则：单次出手直接判定完全落空时重置连击
       dotCountsAsDirectHit: false,         // V2.1 正式规则：后续持续性伤害/区域命中不算作直接命中保底
-      comboScoreTiers: [                   // 待策划：建议值（V2.1 §2.3）
+      comboScoreTiers: [                   // 待策划：建议值（V2.4 拉高高连击天花板）
         { minCombo: 1,  mult: 1.00 },
-        { minCombo: 5,  mult: 1.15 },
-        { minCombo: 10, mult: 1.35 },
-        { minCombo: 20, mult: 1.60 },
-        { minCombo: 30, mult: 1.90 },
-        { minCombo: 50, mult: 2.25 }
+        { minCombo: 5,  mult: 1.20 },
+        { minCombo: 10, mult: 1.45 },
+        { minCombo: 20, mult: 1.80 },
+        { minCombo: 35, mult: 2.20 },
+        { minCombo: 50, mult: 2.65 },
+        { minCombo: 70, mult: 3.10 }
       ],
+      /* V2.4：单次断连前首次突破 30/50/80 连杀即时奖励 */
+      comboMilestones: [                   // 待策划：建议值
+        { combo: 30, bonus: 400 },
+        { combo: 50, bonus: 900 },
+        { combo: 80, bonus: 1800 }
+      ],
+      /* V2.4：正中靶心（掌心40%半径命中≥3只或满蓄必中）+25%基础分与+1能量 */
+      bullseyeRadiusRatio: 0.40,           // 待策划：建议值
+      bullseyeMinHits: 3,                  // 待策划：建议值
+      bullseyeScoreBonus: 0.25,            // 待策划：建议值
+      bullseyeEnergyBonus: 1,              // 待策划：建议值
+      /* V2.4：满蓄力（三档≥0.80s）额外固定战斗分与能量 */
+      tier3ChargeScoreBonus: 150,          // 待策划：建议值
+      tier3ChargeEnergyBonus: 3,           // 待策划：建议值
+      /* V2.4：重击/神掌阻止分裂怪分裂时额外掉落能量 */
+      splitSuppressEnergyBonus: 2,         // 待策划：建议值
+      /* V2.4：神掌流派对精英与重甲额外伤害加成 */
+      godPalmEliteArmorBonus: 0.25,        // 待策划：建议值
+      /* V2.4：流派共鸣（3张流派小成 / 4张流派宗师） */
+      schoolMasteryBonus: {                // 待策划：建议值
+        tier1Count: 3, tier1DmgMul: 0.15, tier1Score: 600,
+        tier2Count: 4, tier2CdReduce: 0.20, tier2Score: 1500
+      },
+      /* V2.4：结算评级阈值（S/A/B/C） */
+      grades: [                            // 待策划：建议值
+        { grade: 'S', minScore: 22000 },
+        { grade: 'A', minScore: 16500 },
+        { grade: 'B', minScore: 12000 },
+        { grade: 'C', minScore: 0 }
+      ],
+      /* V2.4：神掌清场后若场上敌人数 < 2，下一波固定出兵最多提前 2.0s（总兵量恒定 360） */
+      pacing: {                            // 待策划：建议值
+        clearScreenEnemyThreshold: 2,
+        waveFastForwardMaxSec: 2.0
+      },
       multiKillWindow: 0.45,               // 待策划：建议值（单次攻击实例归属窗口）
       multiKillMinKills: 3,                // 待策划：建议值（多杀起算门槛）
       multiKillBonuses: [                  // 待策划：建议值（V2.1 §2.4 单次多杀额外加分）
@@ -1047,38 +1147,38 @@ button:disabled {
       knockbackMax: 180,
       /* 2 分钟轮：制作人「蓄力不应该增加范围」。'palm' = 各档蓄力范围 = 轻点范围（palm.radius 加技能的落掌范围加成），
        * 蓄力只提高伤害/眩晕/击退/聚集；'tier' = 旧规则（下面各档 radius 140/200/280），只给旧测试和对照用。 */
-      radiusMode: 'palm',
-      /* V1.5 §2.3 自描述：顺序为普通落掌、一级、二级、三级。 */
-      timeByTier: [0, 0.45, 0.95, 1.55],
-      damageByTier: [1, 3, 4, 6],
+      /* V2.4：改为三档快节奏蓄力（0.15 / 0.45 / 0.80s），支持按 palmRadius 倍率扩圈 */
+      radiusMode: 'palm_mul',
+      timeByTier: [0, 0.15, 0.45, 0.80],   // 待策划：建议值
+      damageByTier: [1, 1.2, 1.6, 2.5],    // 待策划：建议值
       tiers: [
         {
           level: 1,
-          /* V1.5 §2.3【已确定】蓄力阈值 0.45 / 0.95 / 1.55 秒，伤害倍率 ×3 / ×4 / ×6；不蓄力普通落掌 ×1。
-           * 各级蓄力不扩大基础落掌范围（radiusMode='palm'），蓄力不改变普通攻击冷却。 */
-          time: 0.45,
-          /* 以下眩晕/击退/吸引为 V1.1 默认值，待策划确认；radius 只在 radiusMode='tier'（旧规则）时使用 */
-          radius: 140,
-          damage: 3,
-          stun: 0.75,
+          time: 0.15,                      // 待策划：建议值（轻蓄 <0.45s）
+          radius: 115,
+          radiusMul: 1.00,                 // 待策划：建议值
+          damage: 1.2,                     // 待策划：建议值
+          stun: 0.45,
           knockback: 0,
           pull: 0
         },
         {
           level: 2,
-          time: 0.95,
-          radius: 200,
-          damage: 4,
-          stun: 0.15,
+          time: 0.45,                      // 待策划：建议值（中蓄 0.45–0.79s）
+          radius: 155,
+          radiusMul: 1.35,                 // 待策划：建议值
+          damage: 1.6,                     // 待策划：建议值
+          stun: 0.25,
           knockback: 96,
           pull: 0
         },
         {
           level: 3,
-          time: 1.55,
-          radius: 280,
-          damage: 6,
-          stun: 0,
+          time: 0.80,                      // 待策划：建议值（满蓄 ≥0.80s，必中靶心+150分+3能量+防分裂）
+          radius: 200,
+          radiusMul: 1.75,                 // 待策划：建议值
+          damage: 2.5,                     // 待策划：建议值
+          stun: 0.35,
           knockback: 0,
           pull: 0.72
         }
@@ -1124,7 +1224,8 @@ button:disabled {
       unlockAt: 30,
       /* V1.5 §2.5 击杀能量表（自描述；引擎实际读 enemies.defs.*.energy）。 */
       /* V1.8 §2.6：击杀能量校准（单局 8–10 次神掌目标） */
-      killGain: { normal: 1, fast: 1, slow: 1, armor: 2, special: 3, elite: 5, endgame: 2 }
+      killGain: { normal: 1.25, fast: 1.25, slow: 1.25, armor: 2.5, special: 3.75, elite: 6.25, endgame: 2.5 }, // 待策划：建议值（V2.4 +25% 能量获取）
+      killGainMul: 1.25 // 待策划：建议值
     },
 
     ultimate: {
@@ -1438,8 +1539,11 @@ button:disabled {
       /* 旧引擎“已有同流派技能时提高权重”的倍率，沿用 V1.2 值。迁移状态：legacy。 */
       /* V1.8 §4.8 / §10.2：finalWeight = baseWeight * (1 + W_owned + W_school * min(N_school, maxSchoolStack)) */
       synergyMul: 1.85,
-      ownedSkillBonus: 0.35,     // V1.8 §4.8 已拥有未满级技能权重加成
-      sameSchoolBonus: 0.40,     // V1.8 §4.8 同流派每张已拥有技能加成
+      ownedSkillBonus: 0.85, // 待策划：建议值（V2.4 强化核心技能追级）     // V1.8 §4.8 已拥有未满级技能权重加成
+      sameSchoolBonus: 0.65, // 待策划：建议值（V2.4 强化同流派成型，最高3层）
+      fillerWeightMul: 0.55, // 待策划：建议值（V2.4 压低4张通用填充卡权重）
+      repeatPenalty: 0.25, // 待策划：建议值（V2.4 上轮未选卡权重×0.25）
+      freeRerollsPerRun: 1, // 待策划：建议值（V2.4 每局免费刷新次数）     // V1.8 §4.8 同流派每张已拥有技能加成
       maxSchoolStack: 3,         // V1.8 §4.8 同流派叠加层数上限（最高 +1.20）
       /* 旧引擎按时间分 early/mid/late 的权重窗口；V1.5 不再用时间给技能加权，保留字段仅兼容旧引擎。 */
       phaseCuts: { early: 90, mid: 200 },
@@ -1474,7 +1578,7 @@ button:disabled {
           /* 同一次攻击最多产生的伤害型子攻击数（裂纹持续伤害按每目标每 tick 计）。 */
           maxChildAttacks: 96,
           /* 闪电链总目标数（含首个目标）与三级末端分叉数。 */
-          maxChainTargets: 4,
+          maxChainTargets: 7, // 待策划：建议值（V2.4 配合三级闪电链 7 目标）
           maxForkTargets: 2,
           /* 星屑/火焰/爆炸的最大传播次数。 */
           maxPropagation: 2,
@@ -1572,9 +1676,9 @@ button:disabled {
         },
         chain: {
           /* V1.5 §6.2 技能 D【建议初值待测】：一级 2、二级 3、三级 4 个目标（含首个目标）。 */
-          jumpTargets: [2, 3, 4],
-          /* 后续跳跃伤害为前一段的 40%–50%，取中值 0.45；原样保留上下限供后续调整。 */
-          jumpDamageFalloff: 0.45,
+          jumpTargets: [3, 5, 7], // 待策划：建议值（V2.4 闪电链基础跳数增强）
+          /* V2.4：衰减系数由 0.45/0.75 提升至 0.88 */
+          jumpDamageFalloff: 0.88, // 待策划：建议值
           jumpDamageFalloffMin: 0.4,
           jumpDamageFalloffMax: 0.5,
           forkCount: 2,
@@ -1591,7 +1695,7 @@ button:disabled {
           burstDamageMul: 1,
           burstAoeDamageMul: 0.5,
           echoDamageMul: 0.5,
-          burstRadiusMul: 0.6,
+          burstRadiusMul: 0.72, // 待策划：建议值（V2.4 雷印爆裂范围 +20%）
           /* 回流电弧寻找“曾被闪电链命中”敌人的距离上限（相对落掌范围）；任务实现默认，待策划确认。 */
           echoRangeMul: 2.2
         },
@@ -2851,7 +2955,7 @@ button:disabled {
       pauseOnPopup: false,
       times: [22, 48, 78, 102],                                  // 待策划：建议值（V1.9 §6.2）
       defaultDuration: 14,                                       // 待策划：建议值（V1.9 §17）
-      minEnergyForUltChallenge: 10,                              // 待策划：建议值（V1.9 §6.1 死局过滤门槛）
+      minEnergyForUltChallenge: 20,                              // 待策划：建议值（V2.4 提高神掌挑战门槛，避免死局）
       sequential: true,
       list: [
         {
@@ -3645,7 +3749,8 @@ button:disabled {
       if (b.v21Kills > 0) {
         var mkBonus = v21MultiKillBonus(b.v21Kills);
         var mult = v21ComboMultFor(state.combo > 0 ? state.combo : (b.v21PeakCombo || 1));
-        var gained = Math.floor(((b.v21BasePts || 0) + mkBonus) * mult);
+        var _basePts24 = b.v24Bullseye ? Math.round((b.v21BasePts || 0) * (1 + ((cfg.scoring && cfg.scoring.bullseyeScoreBonus) || 0.25))) : (b.v21BasePts || 0);
+        var gained = Math.floor((_basePts24 + mkBonus) * mult);
         state.combatScore = (state.combatScore || 0) + gained;
         if (mkBonus > 0) {
           state.multiKillCount = (state.multiKillCount || 0) + 1;
@@ -3872,6 +3977,12 @@ button:disabled {
       shayiT: 0,
       huiliuCount: 0,
       lastOfferKey: '',
+      lastOfferedSkillIds: [],
+      freeRerollsLeft: (cfg.skills && cfg.skills.freeRerollsPerRun != null) ? cfg.skills.freeRerollsPerRun : 1,
+      comboMilestoneHit: {},
+      bullseyeCount: 0,
+      splitSuppressedCount: 0,
+      waveFastForwards: 0,
       /* V1.3 §14.3：攻击批次序号与最近一次批次 id（只读表现数据） */
       batchSeq: 0,
       lastBatchId: 0,
@@ -4566,11 +4677,12 @@ button:disabled {
       e.lightningHitAt = state.time;
       v15Emit('markApply', { id: e.id, x: e.x, y: e.y, rank: v15Rank('E') });
     }
-    function v15TriggerMark(e, x, y) {
+    function v15TriggerMark(e, x, y, parentAction) {
       if (!e || v15Rank('E') < 1) return;
       var m = v15Cfg().mark || {};
-      var base = v15Base();
-      var action = v15NewAction('mark', x, y);
+      var base = v15Base() * schoolMasteryDmgMul('雷霆传导');
+      /* V2.4：雷印爆裂击杀计入当次攻击的多杀批次 */
+      var action = (parentAction && parentAction.batchId != null) ? parentAction : v15NewAction('mark', x, y);
       e.mark = 0;
       state.v15Stats.mark += 1;
       v15Emit('markTrigger', { id: e.id, x: x, y: y, rank: v15Rank('E') });
@@ -4613,7 +4725,7 @@ button:disabled {
         seen[m.e.id] = 1;
         if (v15Ctx(atk.action).marks >= v15Lim('maxMarkTriggersPerAttack', 6)) break;
         v15Ctx(atk.action).marks += 1;
-        v15TriggerMark(m.e, m.x, m.y);
+        v15TriggerMark(m.e, m.x, m.y, atk.action);
       }
     }
 
@@ -5140,7 +5252,9 @@ button:disabled {
         if (state.v15Fields[i].kind === 'vacuum') { prefer = state.v15Fields[i]; break; }
       }
       var total = (ch.jumpTargets && ch.jumpTargets[rank - 1]) || rank + 1;
-      if (total > v15Lim('maxChainTargets', 4)) total = v15Lim('maxChainTargets', 4);
+      var _thM = getSchoolMasteryMap()['雷霆传导'];
+      if (_thM && _thM.tier >= 2) total += 1;
+      if (total > v15Lim('maxChainTargets', 7) + 1) total = v15Lim('maxChainTargets', 7) + 1;
       if (total > v15Lim('maxLinkChain', 8)) total = v15Lim('maxLinkChain', 8);
       var jumps = total - 1;
       var lastX = hitList.length ? hitList[0].x : x;
@@ -5156,7 +5270,7 @@ button:disabled {
       for (j = 0; j < jumps; j++) {
         var target = v15FindChainTarget(hitIds, lastX, lastY, prefer);
         if (!target) break;
-        lastDmg = v15Base() * Math.pow(ch.jumpDamageFalloff || 0.45, j + 1);
+        lastDmg = v15Base() * Math.pow(ch.jumpDamageFalloff || 0.88, j + 1) * schoolMasteryDmgMul('雷霆传导');
         v15Deal(action, 'chain', target.x, target.y, 0, lastDmg, { noIgnite: false });
         emit('skillfx', { type: 'chain', fromX: lastX, fromY: lastY, x: target.x, y: target.y, targetId: target.id, index: j });
         v15Emit('chainJump', { fromX: lastX, fromY: lastY, x: target.x, y: target.y, targetId: target.id, index: j, damage: lastDmg });
@@ -6865,6 +6979,34 @@ button:disabled {
       }
       return n;
     }
+    /* V2.4：流派共鸣统计（同流派独立技能 ≥3 流派小成 +15%伤害/+600分；≥4 流派宗师 -20%CD/+1500分） */
+    function getSchoolMasteryMap() {
+      var counts = {};
+      var list = (cfg.skills && cfg.skills.list) || [];
+      for (var i = 0; i < list.length; i++) {
+        var s = list[i];
+        if (!s.school || s.school === '通用') continue;
+        if ((state.skillRanks[s.id] || 0) > 0) {
+          counts[s.school] = (counts[s.school] || 0) + 1;
+        }
+      }
+      var mb = (cfg.scoring && cfg.scoring.schoolMasteryBonus) || {};
+      var t1 = mb.tier1Count || 3;
+      var t2 = mb.tier2Count || 4;
+      var out = {};
+      for (var sch in counts) {
+        if (!Object.prototype.hasOwnProperty.call(counts, sch)) continue;
+        var c = counts[sch];
+        if (c >= t2) out[sch] = { school: sch, count: c, tier: 2, label: '流派宗师', dmgMul: 1 + (mb.tier1DmgMul || 0.15), cdMul: 1 - (mb.tier2CdReduce || 0.20), score: mb.tier2Score || 1500 };
+        else if (c >= t1) out[sch] = { school: sch, count: c, tier: 1, label: '流派小成', dmgMul: 1 + (mb.tier1DmgMul || 0.15), cdMul: 1, score: mb.tier1Score || 600 };
+      }
+      return out;
+    }
+    function schoolMasteryDmgMul(school) {
+      if (!school || school === '通用') return 1;
+      var m = getSchoolMasteryMap()[school];
+      return m ? m.dmgMul : 1;
+    }
     function prereqOk(s) {
       var req = s.prereq && s.prereq.length ? s.prereq : (s.prerequisite || []);
       var levels = s.prereqLevels || s.prerequisiteLevels || {};
@@ -6889,11 +7031,17 @@ button:disabled {
       var ph = phaseName();
       var pm = s.phaseMul && s.phaseMul[ph] != null ? s.phaseMul[ph] : 1;
       var w = s.weight * qw * pm;
-      /* V1.8 §4.8 / §10.2：finalWeight = baseWeight * (1 + W_owned + W_school * min(N_school, maxSchoolStack)) */
+      /* V2.4：强化已拥有/同流派权重，压低通用填充卡权重，对上轮未选卡施加 ×0.25 惩罚 */
+      if (!s.school || s.school === '通用') {
+        w *= (cfg.skills.fillerWeightMul != null ? cfg.skills.fillerWeightMul : 0.55);
+      }
       var _nSch = (s.school && s.school !== '通用') ? schoolOwned(s.school) : 0;
-      var _wOwned = rank > 0 ? (cfg.skills.ownedSkillBonus != null ? cfg.skills.ownedSkillBonus : 0.35) : 0;
-      var _wSchool = _nSch > 0 ? (cfg.skills.sameSchoolBonus != null ? cfg.skills.sameSchoolBonus : 0.40) * Math.min(_nSch, cfg.skills.maxSchoolStack || 3) : 0;
+      var _wOwned = rank > 0 ? (cfg.skills.ownedSkillBonus != null ? cfg.skills.ownedSkillBonus : 0.85) : 0;
+      var _wSchool = _nSch > 0 ? (cfg.skills.sameSchoolBonus != null ? cfg.skills.sameSchoolBonus : 0.65) * Math.min(_nSch, cfg.skills.maxSchoolStack || 3) : 0;
       w *= (1 + _wOwned + _wSchool);
+      if (state.lastOfferedSkillIds && state.lastOfferedSkillIds.indexOf(s.id) >= 0) {
+        w *= (cfg.skills.repeatPenalty != null ? cfg.skills.repeatPenalty : 0.25);
+      }
       return w > 0 ? w : 0;
     }
     function weightedIndex(weights, rngFn) {
@@ -6986,12 +7134,46 @@ button:disabled {
     function offerKey(out) {
       return out.map(function (c) { return c.id; }).sort().join('|');
     }
+    function rollFirstUpgradeCore(n) {
+      /* V2.4：首次升级必出 3 张不同主流派的核心起始技（排除通用填充卡） */
+      var list = cfg.skills.list || [];
+      var bySchool = {};
+      var schools = [];
+      for (var i = 0; i < list.length; i++) {
+        var s = list[i];
+        if (!s.school || s.school === '通用') continue;
+        if (s.skillTypeKey !== 'core') continue;
+        if (!prereqOk(s) || (state.skillRanks[s.id] || 0) >= s.maxRank) continue;
+        if (!bySchool[s.school]) { bySchool[s.school] = []; schools.push(s.school); }
+        bySchool[s.school].push(s);
+      }
+      var out = [];
+      var usedSch = {};
+      while (out.length < n && schools.length > 0) {
+        var pickIdx = Math.floor(rngSkill() * schools.length);
+        var sch = schools.splice(pickIdx, 1)[0];
+        if (usedSch[sch]) continue;
+        usedSch[sch] = true;
+        var arr = bySchool[sch];
+        var chosen = arr[Math.floor(rngSkill() * arr.length)];
+        out.push(presentSkill(chosen));
+      }
+      return out;
+    }
     function rollSkills(n) {
-      var out = rollSkillsOnce(n);
-      /* V1.2 §9.16：避免和上一次三选一完全相同（最多重抽几次，技能池太小时允许相同） */
+      var out;
+      if ((!state.picks || state.picks.length === 0) && !state._usedFirstGuarantee) {
+        out = rollFirstUpgradeCore(n);
+        if (out.length < n) out = rollSkillsOnce(n);
+      } else {
+        out = rollSkillsOnce(n);
+      }
+      /* V2.4：避免和上一次三选一完全相同 */
       if (cfg.skills.avoidRepeatOffer && out.length) {
         var tries = 0;
-        while (offerKey(out) === state.lastOfferKey && tries++ < 6) out = rollSkillsOnce(n);
+        while (offerKey(out) === state.lastOfferKey && tries++ < 8) {
+          out = ((!state.picks || state.picks.length === 0) && !state._usedFirstGuarantee) ? rollFirstUpgradeCore(n) : rollSkillsOnce(n);
+        }
       }
       /* V1.2 §9.16：技能池不够三张时用通用强化补位 */
       var fb = cfg.skills.fallback || [];
@@ -7233,9 +7415,31 @@ button:disabled {
       resolveProgress();
     }
 
+        function rerollUpgrade() {
+      if (state.status !== 'upgrade') return false;
+      if (!(state.freeRerollsLeft > 0)) return false;
+      var prevIds = [];
+      for (var i = 0; i < (state.upgradeChoices || []).length; i++) {
+        if (state.upgradeChoices[i] && state.upgradeChoices[i].id) prevIds.push(state.upgradeChoices[i].id);
+      }
+      state.lastOfferedSkillIds = prevIds;
+      state.freeRerollsLeft -= 1;
+      var n = (cfg.skills && cfg.skills.offer) || 3;
+      state.upgradeChoices = rollSkills(n);
+      emit('upgradeReroll', { choices: state.upgradeChoices.slice(), remaining: state.freeRerollsLeft });
+      return true;
+    }
     function chooseUpgrade(i) {
       if (state.status !== 'upgrade') return;
       var ch = state.upgradeChoices && state.upgradeChoices[i];
+      if (ch) {
+        var _unchosen = [];
+        for (var _ui = 0; _ui < state.upgradeChoices.length; _ui++) {
+          if (_ui !== i && state.upgradeChoices[_ui] && state.upgradeChoices[_ui].id) _unchosen.push(state.upgradeChoices[_ui].id);
+        }
+        state.lastOfferedSkillIds = _unchosen;
+        if (!state._usedFirstGuarantee) state._usedFirstGuarantee = true;
+      }
       if (!ch) return;
       var fbDef = ch.generic ? findFallback(ch.id) : null;
       if (fbDef) {
@@ -7310,6 +7514,7 @@ button:disabled {
       state.combo = 0;
       state.comboTimer = 0;
       state.v21ComboMult = 1.00;
+      state.comboMilestoneHit = {};
       syncComboFields();
       if (had) {
         if (reason === 'whiff') {
@@ -7751,7 +7956,9 @@ button:disabled {
     /* 2 分钟轮：制作人「蓄力不应该增加范围」。charge.radiusMode='palm'（默认）时各档蓄力与轻点同一范围
      * （state.palmRadius，含技能的落掌范围加成）；'tier' 为旧规则（tiers[].radius × chargeRadiusMul），只给旧测试/对照。 */
     function chargeRadius(idx) {
-      if (cfg.charge.radiusMode === 'tier') return cfg.charge.tiers[idx].radius * state.mods.chargeRadiusMul;
+      var t = cfg.charge.tiers[idx];
+      if (cfg.charge.radiusMode === 'palm_mul' && t && t.radiusMul) return state.palmRadius * t.radiusMul * state.mods.chargeRadiusMul;
+      if (cfg.charge.radiusMode === 'tier') return t.radius * state.mods.chargeRadiusMul;
       return state.palmRadius;
     }
     function updateChargePreview() {
@@ -7964,6 +8171,17 @@ button:disabled {
       var tier = tierFor(state.combo);
       syncComboFields();
       state.v21ComboMult = v21ComboMultFor(state.combo);
+      /* V2.4：单次断连前首次突破 30/50/80 连杀即时奖励 +400/+900/+1800 */
+      var _cms = (cfg.scoring && cfg.scoring.comboMilestones) || [];
+      if (!state.comboMilestoneHit) state.comboMilestoneHit = {};
+      for (var _ci = 0; _ci < _cms.length; _ci++) {
+        var _cm = _cms[_ci];
+        if (state.combo >= _cm.combo && !state.comboMilestoneHit[_cm.combo]) {
+          state.comboMilestoneHit[_cm.combo] = true;
+          state.combatScore = (state.combatScore || 0) + _cm.bonus;
+          emit('comboMilestone', { combo: _cm.combo, bonus: _cm.bonus, x: enemy.x, y: enemy.y });
+        }
+      }
       if (batchId != null && openBatches[batchId] && !openBatches[batchId].closed) {
         openBatches[batchId].v21BasePts = (openBatches[batchId].v21BasePts || 0) + _v21Base;
         openBatches[batchId].v21Kills = (openBatches[batchId].v21Kills || 0) + 1;
@@ -8024,7 +8242,7 @@ button:disabled {
       var en = (enemy.energy || 0) + bonus;
       if (enemy.elite) en += state.mods.eliteEnergy;
       if (state.eventFx && state.eventFx.energyMul) en *= state.eventFx.energyMul;
-      en *= state.mods.energyGainMul;
+      en *= state.mods.energyGainMul * ((cfg.energy && cfg.energy.killGainMul) || 1.25);
       if (atk && (atk.kind === 'ultimate' || atk.kind === 'ult-wave')) en += state.mods.energyRefund;
       addEnergy(en);
       if (enemy.elite && state.mods.eliteEnergy > 0) emit('skillfx', { type: 'energyBonus', source: 'chongneng', amount: state.mods.eliteEnergy * (state.eventFx && state.eventFx.energyMul ? state.eventFx.energyMul : 1) * state.mods.energyGainMul, x: enemy.x, y: enemy.y });
@@ -8061,7 +8279,12 @@ button:disabled {
         }
       }
 
-      if (enemy.splitInto > 0 && enemy.child && cfg.enemies.defs[enemy.child]) {
+      var _suppressSplit = !!(atk && ((atk.kind === 'charge' && atk.tier >= 2) || atk.kind === 'ultimate' || atk.kind === 'ult-wave' || atk.godKill));
+      if (enemy.splitInto > 0 && _suppressSplit) {
+        state.splitSuppressedCount = (state.splitSuppressedCount || 0) + 1;
+        addEnergy((cfg.scoring && cfg.scoring.splitSuppressEnergyBonus != null) ? cfg.scoring.splitSuppressEnergyBonus : 2);
+        emit('splitSuppressed', { x: enemy.x, y: enemy.y });
+      } else if (enemy.splitInto > 0 && enemy.child && cfg.enemies.defs[enemy.child]) {
         var cdef = cfg.enemies.defs[enemy.child];
         var baseAng = Math.atan2(enemy.vy || 0, enemy.vx || 1);
         var turn = (enemy.childTurn || 0) * Math.PI * 2;
@@ -8204,6 +8427,32 @@ button:disabled {
         /* V1.5 §7.3：按落掌前屏幕敌人数记录困兽反扑就绪，避免这一掌先击杀几只后漏触发。 */
         if (v15Rank('R') >= 1 && v15OnScreenCount() >= v15BeastThreshold()) state.v15BeastReady = true;
       }
+            /* V2.4：正中靶心判定（掌心40%半径命中≥3只，或满蓄三档必中靶心）+ 三档蓄力固定+150分/+3能量 */
+      var _v24Bullseye = false;
+      if (primary && hitList.length > 0) {
+        var _sc24 = cfg.scoring || {};
+        var _br = (atk.radius || state.palmRadius) * (_sc24.bullseyeRadiusRatio || 0.40);
+        var _br2 = _br * _br;
+        var _centerHits = 0;
+        for (var _bi = 0; _bi < hitList.length; _bi++) {
+          var _dx = hitList[_bi].x - atk.x;
+          var _dy = hitList[_bi].y - atk.y;
+          if (_dx * _dx + _dy * _dy <= _br2) _centerHits += 1;
+        }
+        if (_centerHits >= (_sc24.bullseyeMinHits || 3) || (atk.kind === 'charge' && atk.tier >= 3)) {
+          _v24Bullseye = true;
+          state.bullseyeCount = (state.bullseyeCount || 0) + 1;
+          if (atk.action && atk.action.batchId != null && openBatches[atk.action.batchId]) {
+            openBatches[atk.action.batchId].v24Bullseye = true;
+          }
+          addEnergy(_sc24.bullseyeEnergyBonus != null ? _sc24.bullseyeEnergyBonus : 1);
+          emit('bullseye', { x: atk.x, y: atk.y, hits: _centerHits, tier: atk.tier || 0 });
+        }
+        if (atk.kind === 'charge' && atk.tier >= 3) {
+          state.combatScore = (state.combatScore || 0) + (_sc24.tier3ChargeScoreBonus != null ? _sc24.tier3ChargeScoreBonus : 150);
+          addEnergy(_sc24.tier3ChargeEnergyBonus != null ? _sc24.tier3ChargeEnergyBonus : 3);
+        }
+      }
       if (primary && hitList.length === 0) {
         state.misses += 1;
         /* V2.1 §2.2：直接判定落空立即重置连击；后续持续伤害区域(DOT)不保底 */
@@ -8257,6 +8506,10 @@ button:disabled {
           var absorb = e.shield < dmg ? e.shield : dmg;
           e.shield -= absorb;
           dmg -= absorb;
+        }
+        /* V2.4：神掌爆发对精英/重甲额外 +25% 伤害 + 流派小成伤害加成 */
+        if ((atk.kind === 'ultimate' || atk.kind === 'ult-wave' || atk.kind === 'godEcho' || atk.kind === 'echoCopy' || atk.kind === 'killGod') && (e.elite || e.armor)) {
+          dmg *= (1 + ((cfg.scoring && cfg.scoring.godPalmEliteArmorBonus) || 0.25)) * schoolMasteryDmgMul('神掌爆发');
         }
         e.hp -= dmg;
         if (atk.kind === 'charge' && state.mods.armorBreak > 0 && (e.armor || (e.maxHp || 0) >= cfg.skills.pojiaHpLine)) emit('skillfx', { type: 'armorBreak', id: e.id, x: e.x, y: e.y });
@@ -8582,6 +8835,21 @@ button:disabled {
         });
       }
       /* V1.5 §6.5：神掌残影/杀神降临在神掌释放后追加；不改普通攻击冷却，也不暂停逻辑。 */
+      /* V2.4：神掌清场后若场上敌人数 < 2，下一波固定出兵最多提前 2.0s（总兵量恒定 360） */
+      var _pac = (cfg.scoring && cfg.scoring.pacing) || {};
+      var _thr = _pac.clearScreenEnemyThreshold != null ? _pac.clearScreenEnemyThreshold : 2;
+      var _maxFf = _pac.waveFastForwardMaxSec != null ? _pac.waveFastForwardMaxSec : 2.0;
+      if (state.enemies.length < _thr && state.fixedRoster && state.rosterCursor < state.fixedRoster.length) {
+        var _nextT = state.fixedRoster[state.rosterCursor].t;
+        var _gap = _nextT - (state.time + 0.15);
+        if (_gap > 0.05) {
+          var _shift = Math.min(_maxFf, _gap);
+          for (var _ri = state.rosterCursor; _ri < state.fixedRoster.length; _ri++) {
+            state.fixedRoster[_ri].t = Math.max(state.time + 0.05, state.fixedRoster[_ri].t - _shift);
+          }
+          state.waveFastForwards = (state.waveFastForwards || 0) + 1;
+        }
+      }
       if (v15Rank('M') >= 1) v15CastGodEcho(cx, cy);
       if (v15Rank('O') >= 1) v15CastKillGod(cx, cy);
       emit('ultimate', {
@@ -9165,9 +9433,11 @@ button:disabled {
     function v21EnemyBasePts(enemy) {
       var bp = (cfg.scoring && cfg.scoring.enemyBasePoints) || {};
       if (!enemy) return bp.normal || 10;
-      if (enemy.elite) return bp.elite || 80;
-      if (enemy.armor) return bp.armor || bp.heavy || 25;
-      if (enemy.type === 'split' || enemy.type === 'dodge' || enemy.gold) return bp.special || 25;
+      if (enemy.elite) return bp.elite || 150;
+      if (enemy.armor) return bp.armor || bp.heavy || 35;
+      if (enemy.type === 'split') return bp.split || 35;
+      if (enemy.gold || enemy.type === 'gold') return bp.gold || 35;
+      if (enemy.type === 'dodge') return bp.dodge || 10;
       if (enemy.type === 'fast') return bp.fast || 10;
       return bp.normal || 10;
     }
@@ -9199,25 +9469,54 @@ button:disabled {
           (def.prereqLevels && Object.keys(def.prereqLevels).length) || (def.prerequisiteLevels && Object.keys(def.prerequisiteLevels).length));
         if (rk > 0 && hasPrereq && isSkillPrereqActive(sid)) activeSynergies += 1;
       }
+      var masteryMap = getSchoolMasteryMap();
+      var masteryScore = 0;
+      var masteries = [];
+      for (var mSch in masteryMap) {
+        if (Object.prototype.hasOwnProperty.call(masteryMap, mSch)) {
+          masteryScore += masteryMap[mSch].score || 0;
+          masteries.push(masteryMap[mSch]);
+        }
+      }
       var buildPart = skillRanksSum * (sc.skillRankPoints || 120) +
         lv3Count * (sc.lv3SkillBonus || 250) +
-        activeSynergies * (sc.activeSynergyPoints || 300);
+        activeSynergies * (sc.activeSynergyPoints || 300) +
+        masteryScore;
 
       var missionPart = (state.challengesDone || 0) * (sc.challengeDonePoints || 400);
       var ultPart = (state.ultimates || 0) * (sc.ultCastPoints || 120);
+      var totalScore = combatPart + survPart + buildPart + missionPart + ultPart;
+
+      var grades = sc.grades || [{ grade: 'S', minScore: 22000 }, { grade: 'A', minScore: 16500 }, { grade: 'B', minScore: 12000 }, { grade: 'C', minScore: 0 }];
+      var grade = 'C', nextGrade = null, nextGradeGap = 0;
+      for (var gi = 0; gi < grades.length; gi++) {
+        if (totalScore >= grades[gi].minScore) {
+          grade = grades[gi].grade;
+          if (gi > 0) {
+            nextGrade = grades[gi - 1].grade;
+            nextGradeGap = Math.max(0, grades[gi - 1].minScore - totalScore);
+          }
+          break;
+        }
+      }
 
       return {
         combat: combatPart,
         survival: survPart,
         survivalKill: combatPart + survPart,
         build: buildPart,
+        masteryScore: masteryScore,
+        masteries: masteries,
         mission: missionPart,
         ultimate: ultPart,
+        grade: grade,
+        nextGrade: nextGrade,
+        nextGradeGap: nextGradeGap,
         activeSynergies: activeSynergies,
         multiKillCount: state.multiKillCount || 0,
         whiffResets: state.whiffResets || 0,
         timeoutResets: state.timeoutResets || 0,
-        total: combatPart + survPart + buildPart + missionPart + ultPart
+        total: totalScore
       };
     }
 
@@ -9511,6 +9810,8 @@ button:disabled {
       useUltimate: useUltimate,
       canUseUltimate: canUseUltimate,
       chooseUpgrade: chooseUpgrade,
+      rerollUpgrade: rerollUpgrade,
+      getSchoolMasteryMap: getSchoolMasteryMap,
       skipUpgrade: skipUpgrade,
       chooseStage: chooseStage,
       chooseEvent: chooseEvent,
@@ -9729,6 +10030,7 @@ button:disabled {
   var muteKey = '';
   var activePointer = null;
   var ultPointer = false;
+  var lastPalmPos = null;
   var fx = [];
   /* V1.3 §14.3/§16.7：同一攻击只出一条分数汇总飘字；同时最多 4 条，多余的先排队稍后出现。 */
   var scoreQueue = [];
@@ -9983,15 +10285,15 @@ button:disabled {
     ver.id = 'ver';
     sub.appendChild(ver);
     p._body.appendChild(sub);
-    p._body.appendChild(el('p', 'help', Math.round(CONFIG.duration / 60) + ' 分钟经典模式。叉叉从四面冲进中间的战场，一掌拍回去。上下两栏只显示信息，不挡战场。'));
-    var phone = el('p', 'help');
-    phone.appendChild(el('b', null, '手机：'));
-    phone.appendChild(document.createTextNode('单指点击落掌，按住并拖动蓄力，点右下角神掌释放全场技能。'));
-    var pc = el('p', 'help');
-    pc.appendChild(el('b', null, '电脑：'));
-    pc.appendChild(document.createTextNode('左键点击落掌，按住蓄力，鼠标右键任意位置或点击神掌按钮释放。'));
-    p._body.appendChild(phone);
-    p._body.appendChild(pc);
+    p._body.appendChild(el('p', 'help', Math.round(CONFIG.duration / 60) + ' 分钟公平竞分模式（每局固定 360 只异兽）。冲刺 S 级综合评分！'));
+    var r1 = el('p', 'help');
+    r1.appendChild(el('b', null, '落掌与三档蓄力：'));
+    r1.appendChild(document.createTextNode('点击/左键轻拍；按住蓄力 0.45s 中蓄、0.80s 满蓄（1.75×大范围 +150分 +3能量，且阻止分裂怪分裂）。'));
+    var r2 = el('p', 'help');
+    r2.appendChild(el('b', null, '神掌清场：'));
+    r2.appendChild(document.createTextNode('攒满 30 能量即可点击右下角或鼠标右键释放全场神掌，清场后自动加速下一波出兵。'));
+    p._body.appendChild(r1);
+    p._body.appendChild(r2);
     /* V1.3 §14.5：昵称入口放在开始页全屏面板内。 */
     nodes.startNick = nicknameBlock();
     p._body.appendChild(nodes.startNick.wrap);
@@ -10023,18 +10325,30 @@ button:disabled {
     return p;
   }
 
+  function makeToggleRow(label, onClick) {
+    var row = el('button', 'toggle-row');
+    row.type = 'button';
+    row.appendChild(el('span', null, label));
+    var pill = el('span', 'toggle-pill', '○ 关');
+    row.appendChild(pill);
+    row._pill = pill;
+    row.addEventListener('click', onClick);
+    return row;
+  }
+
   function panelSettings() {
     var p = makePanel('设置');
-    nodes.muteBtn = addBtn(p._body, '音效：开', true, toggleMute);
-    nodes.muteBtn.style.marginBottom = '8px';
-    nodes.lowFxBtn = addBtn(p._body, '低特效模式：关', true, function () {
+    p.classList.add('panel-settings');
+    nodes.muteBtn = makeToggleRow('游戏音效与配乐', toggleMute);
+    p._body.appendChild(nodes.muteBtn);
+    nodes.lowFxBtn = makeToggleRow('低特效省电模式', function () {
       var next = !reducedFx;
       lowFxForced = next;
       try { platform.storage.setItem(lowFxKey, next ? '1' : '0'); } catch (e) {}
       syncReducedFx();
       renderSettings();
     });
-    nodes.lowFxBtn.style.marginBottom = '12px';
+    p._body.appendChild(nodes.lowFxBtn);
     nodes.achBox = el('div');
     p._body.appendChild(nodes.achBox);
     addBtn(p._actions, '返回', true, function () { showPanel('start'); });
@@ -10053,6 +10367,14 @@ button:disabled {
     p._body.appendChild(nodes.upList);
     /* 2 分钟轮：制作人「升级选技能，不应该一点就选好，容易误触，应该先点选技能，再下面点确定按钮」。
      * 点卡片只选中（高亮，可改选）；没选中时「确定」不可点；点「确定」才生效。 */
+    nodes.upReroll = addBtn(p._actions, '换一批（剩余 1 次）', true, function () {
+      if (!game || game.state.status !== 'upgrade' || modalGuardActive()) return;
+      if (game.rerollUpgrade && game.rerollUpgrade()) {
+        shownUpgradeKey = '';
+        renderUpgrade();
+      }
+    });
+    nodes.upReroll.classList.add('reroll-btn');
     nodes.upOk = addBtn(p._actions, '先选一项', false, function () {
       if (!game || game.state.status !== 'upgrade' || upSel < 0 || modalGuardActive()) return;
       var i = upSel;
@@ -10498,12 +10820,32 @@ button:disabled {
   function goHome() {
     running = false;
     paused = false;
+    endShown = false;
     activePointer = null;
+    ultPointer = false;
+    fx.length = 0;
+    drawHud._lastScoreKey = '';
+    drawHud._lastScoreVal = 0;
+    createFresh();
     refreshBest();
     fillBestLine();
     showPanel('start');
   }
 
+  var onboardEl = null, onboardTimer = null;
+  function showFirstRunTip() {
+    var k = (CONFIG.storagePrefix || 'tianjiang_v24_') + 'onboard_done';
+    try { if (platform.storage.getItem(k) === '1') return; } catch (e) {}
+    try { platform.storage.setItem(k, '1'); } catch (e) {}
+    if (onboardEl && onboardEl.parentNode) onboardEl.parentNode.removeChild(onboardEl);
+    onboardEl = el('div', 'onboard-tip', '① 点击轻拍连击 · ② 按住 0.8s 满蓄破阵 · ③ 满 30 能量点右下角释神掌');
+    document.body.appendChild(onboardEl);
+    if (onboardTimer) clearTimeout(onboardTimer);
+    onboardTimer = setTimeout(function () {
+      if (onboardEl && onboardEl.parentNode) onboardEl.parentNode.removeChild(onboardEl);
+      onboardEl = null;
+    }, 9500);
+  }
   function onStart() {
     unlockAudio();
     createFresh();
@@ -10511,6 +10853,7 @@ button:disabled {
     paused = false;
     lastTs = performance.now();
     hideOverlay();
+    showFirstRunTip();
   }
 
   function unlockAudio() {
@@ -10528,8 +10871,14 @@ button:disabled {
 
   function renderSettings() {
     var muted = platform.audio && platform.audio.isMuted && platform.audio.isMuted();
-    if (nodes.muteBtn) nodes.muteBtn.textContent = muted ? '音效：关' : '音效：开';
-    if (nodes.lowFxBtn) nodes.lowFxBtn.textContent = reducedFx ? '低特效模式：开' : '低特效模式：关';
+    if (nodes.muteBtn && nodes.muteBtn._pill) {
+      nodes.muteBtn._pill.textContent = muted ? '○ 关' : '● 开';
+      nodes.muteBtn._pill.classList.toggle('is-on', !muted);
+    }
+    if (nodes.lowFxBtn && nodes.lowFxBtn._pill) {
+      nodes.lowFxBtn._pill.textContent = reducedFx ? '● 开' : '○ 关';
+      nodes.lowFxBtn._pill.classList.toggle('is-on', !!reducedFx);
+    }
     if (!nodes.achBox || !game) return;
     nodes.achBox.textContent = '';
     nodes.achBox.appendChild(el('p', 'small', '成就'));
@@ -10547,7 +10896,7 @@ button:disabled {
     showPanel('board');
   }
 
-  function renderBoard(box, highlight) {
+  function renderBoard(box, highlight, maxRows) {
     if (!box) return;
     box.textContent = '';
     var rows = game ? game.getLeaderboard() : [];
@@ -10556,7 +10905,8 @@ button:disabled {
       return;
     }
     var i;
-    for (i = 0; i < rows.length; i++) {
+    var _lim = (maxRows && maxRows > 0) ? Math.min(rows.length, maxRows) : rows.length;
+    for (i = 0; i < _lim; i++) {
       var r = rows[i];
       var line = el('div', 'board-row' + (highlight === i + 1 ? ' is-me' : ''));
       /* V1.3 §14.6：排名、昵称、击杀、总分、最高连杀、最高等级、记录日期。
@@ -10598,7 +10948,8 @@ button:disabled {
     var rows = game.getLeaderboard();
     var i;
     for (i = 0; i < rows.length; i++) {
-      if ((rows[i].score || 0) > bestCache) bestCache = rows[i].score || 0;
+      var _sc = rows[i].compositeScore != null ? rows[i].compositeScore : (rows[i].score || 0);
+      if (_sc > bestCache) bestCache = _sc;
     }
     fillBestLine();
   }
@@ -10655,6 +11006,23 @@ button:disabled {
     g.on('skillfx', onSkillFx);
     g.on('miss', onMiss);
     g.on('kill', onKill);
+    g.on('hit', function (p) { if (p && p.x != null) lastPalmPos = { x: p.x, y: p.y }; });
+    g.on('miss', function (p) { if (p && p.x != null) lastPalmPos = { x: p.x, y: p.y }; });
+    g.on('bullseye', function (p) {
+      if (!p) return;
+      addFx({ kind: 'sk_learn', text: '正中靶心 +25%', life: 0.72, max: 0.72 });
+      addFx({ kind: 'flash', x: p.x, y: p.y, r: 58, life: 0.16, max: 0.16, color: '#ffd166' });
+      if (platform.audio && platform.audio.play) platform.audio.play('combo', { freq: 880, dur: 0.1 });
+    });
+    g.on('comboMilestone', function (p) {
+      if (!p) return;
+      addFx({ kind: 'sk_learn', text: p.combo + ' 连杀里程碑 +' + p.bonus, life: 1.0, max: 1.0 });
+      if (platform.audio && platform.audio.play) platform.audio.play('levelup', { freq: 720, dur: 0.18 });
+    });
+    g.on('splitSuppressed', function (p) {
+      if (!p) return;
+      addFx({ kind: 'sk_learn', text: '破分裂 +2 能量', life: 0.65, max: 0.65 });
+    });
     /* V1.3 §14.3：攻击批次结算后只出一条「+总分」飘字。 */
     g.on('scoreBatch', onScoreBatch);
     g.on('damage', onDamage);
@@ -11531,10 +11899,30 @@ button:disabled {
       box.appendChild(el('p', null, '本局没有结算数据。'));
       return;
     }
-    box.appendChild(el('div', 'score-big', '综合评分 ' + fmt(res.compositeScore != null ? res.compositeScore : res.score)));
+    var compScore = res.compositeScore != null ? res.compositeScore : (res.score || 0);
+    var bd = res.scoreBreakdown || {};
+    var gLetter = bd.grade || (compScore >= 22000 ? 'S' : compScore >= 16500 ? 'A' : compScore >= 12000 ? 'B' : 'C');
+    var hero = el('div', 'grade-hero');
+    hero.appendChild(el('div', 'grade-badge grade-' + gLetter, gLetter));
+    var gMeta = el('div', 'grade-meta');
+    gMeta.appendChild(el('div', 'score-big', '综合评分 ' + fmt(compScore)));
+    var targetParts = [];
+    if (bd.nextGrade && bd.nextGradeGap > 0) targetParts.push('距 ' + bd.nextGrade + ' 级还差 ' + fmt(bd.nextGradeGap) + ' 分');
+    else if (gLetter === 'S') targetParts.push('已达成最高 S 级评价！');
+    if (bestCache > compScore) targetParts.push('距本机最高分还差 ' + fmt(bestCache - compScore) + ' 分');
+    else if (compScore > 0) targetParts.push('刷新本机最高分！');
+    gMeta.appendChild(el('p', 'grade-target', targetParts.join(' · ')));
+    hero.appendChild(gMeta);
+    box.appendChild(hero);
     if (res.scoreBreakdown) {
-      var bd = res.scoreBreakdown;
-      box.appendChild(el('p', 'score-break', '评分明细：连击多杀 ' + fmt(bd.combat) + ' · 生存通关 ' + fmt(bd.survival) + ' · Build ' + fmt(bd.build) + ' · 挑战 ' + fmt(bd.mission) + ' · 神掌 ' + fmt(bd.ultimate)));
+      box.appendChild(el('p', 'score-break', '评分明细：连击多杀 ' + fmt(bd.combat) + ' + 生存通关 ' + fmt(bd.survival) + ' + Build ' + fmt(bd.build) + ' + 挑战 ' + fmt(bd.mission) + ' + 神掌 ' + fmt(bd.ultimate)));
+      if (bd.masteries && bd.masteries.length) {
+        var mWrap = el('div', 'mastery-tags');
+        for (var mi = 0; mi < bd.masteries.length; mi++) {
+          mWrap.appendChild(el('span', 'mastery-tag', bd.masteries[mi].school + ' · ' + bd.masteries[mi].label + ' (+' + bd.masteries[mi].score + ')'));
+        }
+        box.appendChild(mWrap);
+      }
     }
     var grid = el('div', 'stat-grid');
     grid.appendChild(statCell('击杀数', String(res.kills || 0), 'stat-kills'));
@@ -11552,12 +11940,13 @@ button:disabled {
     grid.appendChild(statCell('神掌', (res.ultimates || 0) + ' 次', ''));
     grid.appendChild(statCell('限时挑战', (res.challengesDone || 0) + '/' + ((CONFIG.challenges.times || []).length) + ' 完成', ''));
     var rankText;
-    if (endRank) rankText = '第 ' + endRank + ' 名（按击杀）' + (endRank === 1 ? ' 新纪录！' : '');
+    if (endRank) rankText = '第 ' + endRank + ' 名（按综合分）' + (endRank === 1 ? ' 新纪录！' : '');
     else {
       var rowsB = game ? game.getLeaderboard() : [];
       var last = rowsB.length ? rowsB[rowsB.length - 1] : null;
-      var gap = last ? Math.max(1, (last.kills || 0) - (res.kills || 0) + 1) : 0;
-      rankText = '未进入前 ' + size + ' 名' + (gap ? '，还差 ' + gap + ' 杀' : '');
+      var lastComp = last ? (last.compositeScore != null ? last.compositeScore : (last.score || 0)) : 0;
+      var gap = last ? Math.max(1, lastComp - compScore + 1) : 0;
+      rankText = '未进入前 ' + size + ' 名' + (gap ? '，距上一名还差 ' + fmt(gap) + ' 分' : '');
     }
     grid.appendChild(statCell('本局名次', rankText, ''));
     box.appendChild(grid);
@@ -11577,13 +11966,7 @@ button:disabled {
     var gi;
     for (gi = 0; gi < stageGot.length; gi++) stageBits.push(stageGot[gi].name || stageGot[gi].id);
     if (stageBits.length) box.appendChild(el('p', 'stat end-skills', '阶段强化：' + stageBits.join('、')));
-    var parts = res.scoreParts || {};
-    var bits = [];
-    var k;
-    for (k in PART_NAME) {
-      if (Object.prototype.hasOwnProperty.call(PART_NAME, k)) bits.push(PART_NAME[k] + ' ' + fmt(parts[k] || 0));
-    }
-    box.appendChild(el('p', 'small score-src', '分数来源：' + bits.join(' · ')));
+    /* V2.4：已移除旧版 V1.5 独立分数来源块，结算仅保留唯一 5 项综合分明细 */
     var ach = res.newAchievements || [];
     if (!ach.length) box.appendChild(el('p', 'stat end-ach', '新成就：无'));
     else {
@@ -11591,7 +11974,7 @@ button:disabled {
       for (i = 0; i < ach.length; i++) box.appendChild(el('p', 'stat end-ach', '新成就：' + (ach[i].name || ach[i].id)));
     }
     box.appendChild(el('p', 'small', '版本 ' + CONFIG.GAME_VERSION));
-    renderBoard(nodes.endBoard, endRank);
+    renderBoard(nodes.endBoard, endRank, 5);
   }
 
   function statCell(label, value, extra) {
@@ -11664,6 +12047,11 @@ button:disabled {
     nodes.upList.textContent = '';
     var i;
     for (i = 0; i < list.length; i++) nodes.upList.appendChild(upgradeButton(list[i], i));
+    if (nodes.upReroll && game && game.state) {
+      var _rr = game.state.freeRerollsLeft || 0;
+      nodes.upReroll.textContent = '换一批（剩余 ' + _rr + ' 次）';
+      nodes.upReroll.disabled = _rr <= 0;
+    }
     upSel = -1;
     markSelected(nodes.upList, nodes.upOk, -1);
   }
@@ -11686,13 +12074,12 @@ button:disabled {
         if (_head) _head.appendChild(el('span', 'school-boost-tag', '同流派加成'));
       }
     }
-    /* 精简技能卡信息，去掉冗余多行拆解与视觉预览块，确保 3 张卡一屏完整展示、零滚动条 */
+    /* V2.4：极简技能卡面——保留流派标、技能名与一句精炼中文描述，去掉冗余前置行 */
     var mainTxt = ch.nextMechanic || ch.rankDesc || ch.description || ch.desc || '';
+    var colonIdx = mainTxt.indexOf('：');
+    if (colonIdx > 0 && colonIdx <= 10) mainTxt = mainTxt.slice(colonIdx + 1);
+    if (mainTxt.length > 44) mainTxt = mainTxt.slice(0, 43) + '…';
     b.appendChild(el('span', 'desc', mainTxt));
-    if (ch.prerequisiteText && ch.prerequisiteText !== '无') {
-      var preRow = el('div', 'skill-prereq-mini', '前置：' + ch.prerequisiteText);
-      b.appendChild(preRow);
-    }
     b.setAttribute('aria-pressed', 'false');
     b.addEventListener('click', function () {
       if (!game || game.state.status !== 'upgrade') return;
@@ -12282,9 +12669,22 @@ button:disabled {
 
   function drawCharge() {
     var c = game.state.charge;
-    if (!c || !c.active) return;
+    if (!c || !c.active) {
+      /* V2.4：轻点落掌冷却环形提示（避免连点误以为没响应） */
+      if (game && game.state && game.state.palmCd > 0 && lastPalmPos && (CONFIG.palm && CONFIG.palm.cooldown > 0)) {
+        var _cdRatio = Math.min(1, game.state.palmCd / CONFIG.palm.cooldown);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 224, 154, 0.45)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(lastPalmPos.x, lastPalmPos.y, 26, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - _cdRatio));
+        ctx.stroke();
+        ctx.restore();
+      }
+      return;
+    }
     var tier = c.tier || 0;
-    var col = tier >= 3 ? '#ffd166' : tier === 2 ? '#ff8a4a' : tier === 1 ? '#7ee0ff' : '#9ad7ff';
+    var col = tier >= 3 ? ((Math.floor(idleT * 12) % 2 === 0) ? '#ff4d5a' : '#ffd166') : tier === 2 ? '#ffd166' : '#eef6ff';
     ctx.save();
     ctx.strokeStyle = col;
     ctx.lineWidth = tier > 0 ? 8 : 4;
@@ -14260,8 +14660,8 @@ button:disabled {
     ctx.font = font(22, 700);
     var best = Math.max(bestCache, score);
     /* V1.5 §13.2：顶部状态栏也显示神掌能量；30/60/90 刻度在底部神掌按钮上。 */
-    var energyTop = playing ? ('  · 神掌 ' + Math.floor(game.state.energy || 0) + '/' + (CONFIG.energy.max || 100)) : '';
-    ctx.fillText(fitText('最高 ' + fmt(best) + energyTop, 260), 36, top + 118);
+    var energyTop = playing ? (' · 能量 ' + Math.floor(game.state.energy || 0)) : '';
+    ctx.fillText(fitText('最高 ' + fmt(best) + energyTop, 305), 36, top + 118);
 
     var remain = playing ? (CONFIG.duration - game.state.time) : CONFIG.duration;
     if (remain < 0) remain = 0;
@@ -14406,7 +14806,7 @@ button:disabled {
       label = '';
       ratio = 1;
     } else if (next) {
-      label = '下一档 ' + next.kills + ' 杀 · ' + kills + '/' + next.kills;
+      label = '下档 ' + kills + '/' + next.kills + ' 杀';
       var span = next.kills - (cur.kills || 0);
       ratio = span > 0 ? (kills - (cur.kills || 0)) / span : 1;
     } else {
