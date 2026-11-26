@@ -5,7 +5,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%230b1628%27/%3E%3Ctext x=%2732%27 y=%2745%27 text-anchor=%27middle%27 font-size=%2736%27%3E%F0%9F%96%90%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#07101c">
-<title>天降一掌 V2.7</title>
+<title>天降一掌 V2.8</title>
 <style>
 /* 《天降一掌》界面。手机竖屏优先，桌面居中。不用外部字体。 */
 :root {
@@ -916,6 +916,18 @@ button:disabled {
 .survival-split {
   font-size: 12px; color: #9fd3c7; margin: 2px 0 6px;
 }
+
+.reset-notice {
+  margin: 4px 0 6px; font-size: 12px; color: #9ec5e6; opacity: 0.9;
+}
+.palm-bubble {
+  position: fixed; right: 16px; bottom: 138px; z-index: 16;
+  background: linear-gradient(135deg, #ffe066, #ff922b); color: #1b1104;
+  border-radius: 12px; padding: 8px 13px; font-size: 13px; font-weight: 900;
+  pointer-events: none; box-shadow: 0 6px 18px rgba(255, 169, 64, 0.45);
+  animation: palmBob 1.1s ease-in-out infinite;
+}
+@keyframes palmBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 </style>
 </head>
 <body>
@@ -934,7 +946,7 @@ button:disabled {
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var GAME_VERSION = 'V2.7';   /* 与策划案 V2.7 对应 */
+  var GAME_VERSION = 'V2.8';   /* 与策划案 V2.8 对应 */
 
   var CONFIG = {
     GAME_VERSION: GAME_VERSION,
@@ -945,8 +957,8 @@ button:disabled {
 
     /* V1.5：存档前缀与旧版本分开（file:// 下多个版本共用 localStorage，避免排行榜混在一起）。
      * V1.3 §14.4/§14.5 的存档规则沿用，仅版本前缀升级。 */
-    storagePrefix: 'tianjiang_v27_',
-    legacyPrefixes: ['tianjiang_v26_', 'tianjiang_v25_', 'tianjiang_v24_', 'tianjiang_v23_', 'tianjiang_v22_', 'tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
+    storagePrefix: 'tianjiang_v28_',
+    legacyPrefixes: ['tianjiang_v27_', 'tianjiang_v26_', 'tianjiang_v25_', 'tianjiang_v24_', 'tianjiang_v23_', 'tianjiang_v22_', 'tianjiang_v21_', 'tianjiang_v20_', 'tianjiang_v19_', 'tianjiang_v18_', 'tianjiang_v17_', 'tianjiang_v16_', 'tianjiang_v15_'],
     /* V1.8 §15.2：5 个固定基准测试种子 */
     benchmarkSeeds: [10001, 20002, 30003, 40004, 50005],
     /* V2.5：高频点击节流与弹窗确认防重入锁 */
@@ -1110,10 +1122,12 @@ button:disabled {
         tier2MaxedCount: 3, tier2CdReduce: 0.20, tier2Score: 1500 // V2.6：同系3张均满级(Lv3)激活流派大成
       },
       /* V2.4：结算评级阈值（S/A/B/C） */
-      grades: [                            // 待策划：建议值
-        { grade: 'S', minScore: 22000 },
-        { grade: 'A', minScore: 16500 },
-        { grade: 'B', minScore: 12000 },
+      maxValidScore: 65000,                // 待策划：建议值（V2.8 本地榜单合理总分上限校验）
+      tier1BullseyeRatio: 0.46,            // 待策划：建议值（V2.8 一级短蓄靶心判定放宽15%）
+      grades: [                            // 待策划：建议值（V2.8 依实测重定 S/A/B 线）
+        { grade: 'S', minScore: 21000 },
+        { grade: 'A', minScore: 15500 },
+        { grade: 'B', minScore: 11000 },
         { grade: 'C', minScore: 0 }
       ],
       /* V2.4：神掌清场后若场上敌人数 < 2，下一波固定出兵最多提前 2.0s（总兵量恒定 360） */
@@ -1151,7 +1165,7 @@ button:disabled {
       /* 策划 §13：基础伤害 1，冷却 0.15 秒 */
       damage: 1,
       /* V1.2 §5.2【建议初值／待测试】普通落掌基础攻击间隔约 0.35 秒（V1.1 为 0.15） */
-      cooldown: 0.35,
+      cooldown: 0.33, // 待策划：建议值（V2.8 点按冷却微调 0.35→0.33s 收敛与蓄力分差）
       /* 默认值，待策划确认 */
       radius: 115,
       /* V1.2 §9.2「全局基础落掌范围提升设置上限」：落掌范围倍率最多 ×1.40（掌风扩散满级 1.10³≈1.33，再加掌风余势 8% 会被截到 1.40）。
@@ -1184,13 +1198,13 @@ button:disabled {
       tiers: [
         {
           level: 1,
-          time: 0.18,                      // 待策划：建议值（1档短蓄 0.18–0.44s）
-          radius: 115,
-          radiusMul: 1.00,                 // 待策划：建议值
-          damage: 1.00,                    // 待策划：建议值
+          time: 0.18,                      // 待策划：建议值（V2.8 1档短蓄 0.18–0.44s）
+          radius: 121,
+          radiusMul: 1.05,                 // 待策划：建议值（V2.8 短蓄范围 1.05x）
+          damage: 1.05,                    // 待策划：建议值（V2.8 短蓄伤害 1.05x）
           cooldown: 0.35,                  // 待策划：建议值
           stun: 0.35,
-          knockback: 0,
+          knockback: 28,                   // 待策划：建议值（V2.8 短蓄新增28px轻度击退）
           pull: 0
         },
         {
@@ -2099,7 +2113,7 @@ button:disabled {
           triggerCondition: '落掌命中敌人后，闪电自动寻找附近敌人',
           effectType: '电弧跳跃 + 麻痹 + 末端分叉',
           visualEffect: '蓝白电弧在敌人之间清晰连接、闪白与电流附着',
-          duration: null, range: null, damage: 0.45, chainLimit: 4, recursionLimit: 1,
+          duration: null, range: null, damage: 0.55, chainLimit: 4, // 待策划：建议值（V2.8 提升雷霆前期连锁伤害） recursionLimit: 1,
           description: '命中后电流在敌人之间跳跃，形成连锁清场。',
           desc: '命中后电流在敌人之间跳跃，形成连锁清场。',
           descByRank: [
@@ -2566,7 +2580,7 @@ button:disabled {
         },
         {
           skillId: 'P', id: 'P', name: '残影追掌', skillName: '残影追掌',
-          school: '通用', schoolKey: 'general', category: 'general',
+          school: '神掌爆发', schoolKey: 'god', category: 'general',
           skillType: '通用', skillTypeKey: 'general',
           quality: 'common', weight: 5, maxRank: 3, maxLevel: 3, level: 3,
           prerequisite: [], prereq: [], prereqMode: 'any', prereqLevels: {},
@@ -2608,7 +2622,7 @@ button:disabled {
         },
         {
           skillId: 'Q', id: 'Q', name: '裂地冲击', skillName: '裂地冲击',
-          school: '通用', schoolKey: 'general', category: 'general',
+          school: '烈焰灼烧', schoolKey: 'fire', category: 'general',
           skillType: '通用', skillTypeKey: 'general',
           quality: 'common', weight: 5, maxRank: 3, maxLevel: 3, level: 3,
           prerequisite: [], prereq: [], prereqMode: 'any', prereqLevels: {},
@@ -2689,7 +2703,7 @@ button:disabled {
         },
         {
           skillId: 'S', id: 'S', name: '掌风回旋', skillName: '掌风回旋',
-          school: '通用', schoolKey: 'general', category: 'general',
+          school: '吸星聚爆', schoolKey: 'pull', category: 'general',
           skillType: '通用', skillTypeKey: 'general',
           quality: 'common', weight: 5, maxRank: 3, maxLevel: 3, level: 3,
           prerequisite: [], prereq: [], prereqMode: 'any', prereqLevels: {},
@@ -4021,6 +4035,9 @@ button:disabled {
       waveFastForwards: 0,
       palmHitScore: 0,
       ultWhiffs: 0,
+      deferredElites: [],
+      _stepSpawned: 0,
+      announcedMastery: {},
       /* V1.3 §14.3：攻击批次序号与最近一次批次 id（只读表现数据） */
       batchSeq: 0,
       lastBatchId: 0,
@@ -7060,13 +7077,24 @@ button:disabled {
       for (var k in mp) if (Object.prototype.hasOwnProperty.call(mp, k) && mp[k].tier >= 2) return true;
       return false;
     }
-    function anyMasteryDmgMul() {
-      var mp = getSchoolMasteryMap();
-      var mul = 1;
-      for (var k in mp) {
-        if (Object.prototype.hasOwnProperty.call(mp, k) && mp[k].dmgMul > mul) mul = mp[k].dmgMul;
-      }
-      return mul;
+    /* V2.8 P2：按技能来源精准分流流派增伤，废弃全局 anyMasteryDmgMul */
+    function schoolForAttackKind(kind) {
+      if (!kind) return null;
+      if (kind === 'vacuum' || kind === 'starburst' || kind === 'wanzhang' || kind === 'whirl' || kind === 'whirlSplit') return '吸星聚爆';
+      if (kind === 'chain' || kind === 'markBurst' || kind === 'mark' || kind === 'thunder' || kind === 'chainBurst') return '雷霆传导';
+      if (kind === 'burn' || kind === 'fire' || kind === 'crack' || kind === 'firesea' || kind === 'steamBurst' || kind === 'groundCrack' || kind === 'groundSpike') return '烈焰灼烧';
+      if (kind === 'ice' || kind === 'iceSpike' || kind === 'iceCage' || kind === 'iceTide' || kind === 'shatter') return '冰封掌控';
+      if (kind === 'ultimate' || kind === 'ult-wave' || kind === 'godEcho' || kind === 'echoCopy' || kind === 'killGod' || kind === 'residualPalm') return '神掌爆发';
+      return null;
+    }
+    function schoolMasteryDmgMulForKind(kind) {
+      var sch = schoolForAttackKind(kind);
+      if (!sch) return 1;
+      var m = getSchoolMasteryMap()[sch];
+      if (!m) return 1;
+      var mb = (cfg.scoring && cfg.scoring.schoolMasteryBonus) || {};
+      var bonus = (mb.tier1DmgMul || 0.15);
+      return m.tier >= 2 ? (1 + bonus * 2) : (1 + bonus);
     }
     function schoolMasteryDmgMul(school) {
       if (!school || school === '通用') return 1;
@@ -7109,7 +7137,7 @@ button:disabled {
       w *= (1 + _wOwned + _wSchool);
       if (s.id === 'E' && (state.skillRanks['D'] || 0) > 0 && (state.skillRanks['E'] || 0) === 0) {
         /* V2.7：持有闪电链(D)后大幅提升雷霆印记(E)权重，避免 6–8 级才出 */
-        w *= 6.0;
+        w *= 8.5; // 待策划：建议值（V2.8 进一步提升雷霆印记在 Lv.3-4 出现率）
       }
       if (state.lastOfferedSkillIds && state.lastOfferedSkillIds.indexOf(s.id) >= 0) {
         w *= (cfg.skills.repeatPenalty != null ? cfg.skills.repeatPenalty : 0.25);
@@ -7537,14 +7565,11 @@ button:disabled {
         }
       }
       var prevKey = offerKey(state.upgradeChoices || []);
-      state.lastOfferedSkillIds = prevIds;
-      state.lastOfferKey = prevKey;
-      state.freeRerollsLeft -= 1;
       var n = (cfg.skills && cfg.skills.offer) || 3;
-      /* V2.7：换一批强制优先排除当前展示的 3 张卡，杜绝刷出完全相同的 3 张 */
-      var list = cfg.skills.list || [];
       var earlyLim = (cfg.skills && cfg.skills.earlyGuaranteeLevels) || 3;
       var inEarly = (state.picks ? state.picks.length : 0) < earlyLim;
+      var list = cfg.skills.list || [];
+      /* V2.8 P2：换一批复用前 3 次升级流派分散保底；先尝试排除旧 3 张的不同流派组合 */
       var exclPool = [];
       for (var j = 0; j < list.length; j++) {
         var s = list[j];
@@ -7553,27 +7578,38 @@ button:disabled {
         if (inEarly && (!s.school || s.school === '通用')) continue;
         exclPool.push(s);
       }
-      var fresh = [];
+      var out = [];
+      var usedSch = {};
+      var usedId = {};
       if (exclPool.length >= n) {
-        var used = {};
-        for (var k = 0; k < n && exclPool.length > 0; k++) {
-          var weights = exclPool.map(function (x) { return Math.max(1, skillWeight(x)); });
-          var wi = weightedIndex(weights, rngSkill);
-          if (wi < 0) wi = 0;
-          var picked = exclPool.splice(wi, 1)[0];
-          if (!used[picked.id]) {
-            used[picked.id] = 1;
-            fresh.push(presentSkill(picked));
-          }
+        var poolCopy = exclPool.slice();
+        while (out.length < n && poolCopy.length > 0) {
+          var cand = inEarly ? poolCopy.filter(function (x) { return !usedSch[x.school]; }) : poolCopy;
+          if (!cand.length) cand = poolCopy;
+          var ws = cand.map(function (x) { return Math.max(0.01, skillWeight(x)); });
+          var idx = weightedIndex(ws, rngSkill);
+          var picked = cand[idx >= 0 ? idx : 0];
+          usedId[picked.id] = 1;
+          if (picked.school) usedSch[picked.school] = 1;
+          out.push(presentSkill(picked));
+          poolCopy = poolCopy.filter(function (x) { return !usedId[x.id]; });
+        }
+      } else {
+        for (var tr = 0; tr < 12; tr++) {
+          var candOut = inEarly ? rollEarlyGuarantee(n) : rollSkillsOnce(n);
+          candOut = dedupeOffer(candOut, n);
+          if (offerKey(candOut) !== prevKey) { out = candOut; break; }
         }
       }
-      if (fresh.length < n) {
-        fresh = rollSkills(n);
-        var tries = 0;
-        while (offerKey(fresh) === prevKey && tries++ < 10) fresh = rollSkills(n);
+      /* V2.8 P2：若候选不足导致无法生成不同组合，不扣除唯一一次换卡机会并提示 */
+      if (!out.length || offerKey(out) === prevKey) {
+        emit('rerollEmpty', { remaining: state.freeRerollsLeft });
+        return false;
       }
-      state.upgradeChoices = fresh;
-      state.lastOfferKey = offerKey(fresh);
+      state.lastOfferedSkillIds = prevIds;
+      state.lastOfferKey = prevKey;
+      state.freeRerollsLeft -= 1;
+      state.upgradeChoices = out;
       emit('upgradeReroll', { choices: state.upgradeChoices.slice(), remaining: state.freeRerollsLeft });
       return true;
     }
@@ -7978,20 +8014,35 @@ button:disabled {
     function tickFixedRoster() {
       if (!state.fixedRoster) state.fixedRoster = buildFixedRoster();
       if (!state.fixedRoster || !state.spawning) return;
-      /* V2.7：固定刷怪与补刷受当前难度档位同屏上限及单步最多 maxPerStep(6) 只约束 */
-      var stageCap = (state.pace && state.pace.maxEnemies) ? state.pace.maxEnemies : (cfg.spawn.maxOnField || 30);
+      /* V2.8 P1：统一读取 state.pace.cap，单步共享 state._stepSpawned <= 6，固定精英走 canSpawnElite() */
+      var stageCap = (state.pace && state.pace.cap) ? state.pace.cap : (cfg.spawn.maxOnField || 30);
       var cap = Math.min(cfg.spawn.maxOnField || 30, stageCap);
       var maxStep = cfg.spawn.maxPerStep || 6;
-      var spawnedNow = 0;
+      if (state._stepSpawned == null) state._stepSpawned = 0;
+      /* 先尝试补刷因 canSpawnElite() 延后的固定精英 */
+      while (state.deferredElites && state.deferredElites.length > 0 && state._stepSpawned < maxStep && state.enemies.length < cap) {
+        if (!canSpawnElite()) break;
+        var dItem = state.deferredElites.shift();
+        var dDef = cfg.enemies.defs[dItem.type] || cfg.enemies.defs.elite;
+        spawnFromSide(pickSide(), dDef, false);
+        state._stepSpawned += 1;
+        state.totalSpawned += 1;
+        state.spawnedByType[dItem.type] = (state.spawnedByType[dItem.type] || 0) + 1;
+      }
       while (state.rosterCursor < state.fixedRoster.length &&
              state.time + cfg.time.eps >= state.fixedRoster[state.rosterCursor].t &&
-             spawnedNow < maxStep) {
+             state._stepSpawned < maxStep) {
         if (state.enemies.length >= cap) break;
         var item = state.fixedRoster[state.rosterCursor];
         state.rosterCursor += 1;
         var def = cfg.enemies.defs[item.type] || cfg.enemies.defs.normal;
-        spawnFromSide(pickSide(), def, true);
-        spawnedNow += 1;
+        if (def.elite && !canSpawnElite()) {
+          if (!state.deferredElites) state.deferredElites = [];
+          state.deferredElites.push(item);
+          continue;
+        }
+        spawnFromSide(pickSide(), def, false);
+        state._stepSpawned += 1;
         state.totalSpawned += 1;
         state.spawnedByType[item.type] = (state.spawnedByType[item.type] || 0) + 1;
       }
@@ -8087,11 +8138,13 @@ button:disabled {
       if (state.pace && state.pace.burstChance > 0 && rng() < state.pace.burstChance) n = state.pace.burstSize || 1;
       var side = pickSide();
       var k;
+      var maxStepD = cfg.spawn.maxPerStep || 6;
       for (k = 0; k < n; k++) {
-        if (state.enemies.length >= cap) break;
+        if (state.enemies.length >= cap || (state._stepSpawned || 0) >= maxStepD) break;
         var type = pickType();
         var def = cfg.enemies.defs[type] || cfg.enemies.defs.normal;
         spawnFromSide(side, def);
+        state._stepSpawned = (state._stepSpawned || 0) + 1;
       }
       if (n > 1) state.bursts = (state.bursts || 0) + 1;
     }
@@ -8617,7 +8670,8 @@ button:disabled {
       var _v24Bullseye = false;
       if (primary && hitList.length > 0) {
         var _sc24 = cfg.scoring || {};
-        var _br = (atk.radius || state.palmRadius) * (_sc24.bullseyeRadiusRatio || 0.40);
+        var _bRatio = (atk.kind === 'charge' && atk.tier === 1) ? (_sc24.tier1BullseyeRatio || 0.46) : (_sc24.bullseyeRadiusRatio || 0.40);
+        var _br = (atk.radius || state.palmRadius) * _bRatio;
         var _br2 = _br * _br;
         var _centerHits = 0;
         for (var _bi = 0; _bi < hitList.length; _bi++) {
@@ -8689,19 +8743,18 @@ button:disabled {
         }
         var shieldBefore = e.shield;
         var dmg = computeDamage(e, atk, flags);
+        /* V2.8 P2：严格按技能来源分流流派增伤，并在扣除护盾前统一乘算（补全裂地、闪电链与雷印） */
+        var _mDmgSrc = schoolMasteryDmgMulForKind(atk.kind);
+        if (_mDmgSrc > 1 && atk.kind !== 'chain' && atk.kind !== 'markBurst') {
+          dmg *= _mDmgSrc;
+        }
+        if ((atk.kind === 'ultimate' || atk.kind === 'ult-wave' || atk.kind === 'godEcho' || atk.kind === 'echoCopy' || atk.kind === 'killGod') && (e.elite || e.armor)) {
+          dmg *= (1 + ((cfg.scoring && cfg.scoring.godPalmEliteArmorBonus) || 0.25));
+        }
         if (e.shield > 0 && dmg > 0) {
           var absorb = e.shield < dmg ? e.shield : dmg;
           e.shield -= absorb;
           dmg -= absorb;
-        }
-        /* V2.7：流派小成/大成 +15% 伤害全覆盖（吸星/烈焰/冰封/雷霆/神掌及普通落掌/蓄力全路径统一生效） */
-        var _mDmgAll = anyMasteryDmgMul();
-        if (_mDmgAll > 1 && atk.kind !== 'chain' && atk.kind !== 'markBurst') {
-          dmg *= _mDmgAll;
-        }
-        /* V2.4：神掌爆发对精英/重甲额外 +25% 伤害 */
-        if ((atk.kind === 'ultimate' || atk.kind === 'ult-wave' || atk.kind === 'godEcho' || atk.kind === 'echoCopy' || atk.kind === 'killGod') && (e.elite || e.armor)) {
-          dmg *= (1 + ((cfg.scoring && cfg.scoring.godPalmEliteArmorBonus) || 0.25));
         }
         e.hp -= dmg;
         if (atk.kind === 'charge' && state.mods.armorBreak > 0 && (e.armor || (e.maxHp || 0) >= cfg.skills.pojiaHpLine)) emit('skillfx', { type: 'armorBreak', id: e.id, x: e.x, y: e.y });
@@ -8939,9 +8992,11 @@ button:disabled {
       /* V1.9 §12.5：若上次因阻塞弹窗冻结了蓄力进度，重新按下时原封不动续接 */
       if (state.frozenCharge && state.frozenCharge.held > 0) {
         state.pointer.held = state.frozenCharge.held;
+        state.pointer.resumedHeld = state.frozenCharge.held;
         state.frozenCharge = null;
       } else {
         state.pointer.held = 0;
+        state.pointer.resumedHeld = 0;
       }
       updateChargePreview();
     }
@@ -8963,18 +9018,27 @@ button:disabled {
     function pointerUp(x, y, upWallMs) {
       if (!state.pointer.down) return;
       var _sAtUp = (cfg.charge && cfg.charge.chargeSlowStartSec != null) ? cfg.charge.chargeSlowStartSec : 0.25;
-      /* V2.7：蓄力期间松手不瞬移到目标坐标，仅未进入减速期时更新落点 */
-      if (isNum(x) && isNum(y) && state.pointer.held <= _sAtUp) {
-        state.pointer.x = clampPlay(x, cfg.world.width);
-        state.pointer.y = clampPlay(y, cfg.world.height);
+      var _sMulUp = (cfg.charge && cfg.charge.chargingMoveSpeedMult != null) ? cfg.charge.chargingMoveSpeedMult : 0.65;
+      /* V2.8 P2：蓄力 >0.25s 时松手坐标按减速系数平滑纳入最终落点，不丢弃松手位置 */
+      if (isNum(x) && isNum(y)) {
+        var _ux = clampPlay(x, cfg.world.width);
+        var _uy = clampPlay(y, cfg.world.height);
+        if (state.pointer.held <= _sAtUp) {
+          state.pointer.x = _ux;
+          state.pointer.y = _uy;
+        } else {
+          state.pointer.x = state.pointer.x + (_ux - state.pointer.x) * _sMulUp;
+          state.pointer.y = state.pointer.y + (_uy - state.pointer.y) * _sMulUp;
+        }
       }
       var cancelled = state.pointer.cancelled || state.status !== 'playing';
       var held = state.pointer.held;
-      /* V2.7：当 UI 传入真实时间戳时，按真实按住时长封顶，防止大卡顿追帧把短按误判为满蓄 */
+      /* V2.8 P2：真实时间戳封顶累加冻结前已保存的 resumedHeld，不丢弃弹窗冻结前的蓄力进度 */
       if (typeof upWallMs === 'number' && typeof state.pointer.downWallMs === 'number' && upWallMs >= state.pointer.downWallMs) {
-        var realHeld = (upWallMs - state.pointer.downWallMs) / 1000;
+        var realHeld = (state.pointer.resumedHeld || 0) + (upWallMs - state.pointer.downWallMs) / 1000;
         if (realHeld < held) held = realHeld;
       }
+      state.pointer.resumedHeld = 0;
       var px = state.pointer.x;
       var py = state.pointer.y;
       state.pointer.down = false;
@@ -8990,6 +9054,16 @@ button:disabled {
         firePalm(px, py);
       } else {
         fireCharge(px, py, idx);
+      }
+            var _mpAfter = getSchoolMasteryMap();
+      if (!state.announcedMastery) state.announcedMastery = {};
+      for (var _mk in _mpAfter) {
+        if (!Object.prototype.hasOwnProperty.call(_mpAfter, _mk)) continue;
+        var _mt = _mpAfter[_mk].tier;
+        if ((state.announcedMastery[_mk] || 0) < _mt) {
+          state.announcedMastery[_mk] = _mt;
+          emit('masteryUnlock', { school: _mk, tier: _mt, label: _mpAfter[_mk].label, score: _mpAfter[_mk].score });
+        }
       }
       resolveProgress();
       if (state.status === 'playing') checkStages();
@@ -9551,6 +9625,7 @@ button:disabled {
     }
 
     function simulate(dt) {
+      state._stepSpawned = 0;
       updatePace();
       if (!state.clutchMarked && state.time + cfg.time.eps >= cfg.duration - cfg.achievements.clutchWindow) {
         state.clutchMarked = true;
@@ -9606,7 +9681,6 @@ button:disabled {
         if (state.comboTimer <= 0) clearCombo('timeout');
       }
       tickEvent(dt);
-      tickChallenge(dt);
       state.weightTick -= dt;
       if (state.weightTick <= 0) {
         state.weightTick = cfg.spawn.weightRetick;
@@ -9632,6 +9706,8 @@ button:disabled {
       updateEnemies(dt);
       tickZones(dt);
       tickDelayed(dt);
+      /* V2.8 P2：同帧先结算所有攻击命中/死亡与挑战进度，再判定挑战超时 */
+      tickChallenge(dt);
       syncComboFields();
       if (state.tierIndex > state.maxTierIndex) state.maxTierIndex = state.tierIndex;
     }
@@ -9937,7 +10013,13 @@ button:disabled {
         var r = arr[i];
         if (!r || typeof r !== 'object') continue;
         var sc = Number(r.compositeScore != null ? r.compositeScore : r.score);
-        if (!isFinite(sc) || sc < 0 || sc > 999999) continue;
+        var maxValid = (cfg.scoring && cfg.scoring.maxValidScore) || 65000;
+        if (!isFinite(sc) || sc < 0 || sc > maxValid) continue;
+        if (r.scoreBreakdown && typeof r.scoreBreakdown === 'object') {
+          var sb = r.scoreBreakdown;
+          var sumB = (Number(sb.combat)||0) + (Number(sb.survival)||0) + (Number(sb.build)||0) + (Number(sb.mission)||0) + (Number(sb.ultimate)||0);
+          if (Math.abs(sumB - sc) > 1 || (Number(sb.combat)||0) < 0 || (Number(sb.survival)||0) < 0) continue;
+        }
         var kills = Number(r.kills);
         if (!isFinite(kills) || kills < 0 || kills > 2000) kills = 0;
         var bestC = Number(r.bestCombo);
@@ -10548,7 +10630,7 @@ button:disabled {
     p._body.appendChild(el('p', 'help', Math.round(CONFIG.duration / 60) + ' 分钟公平竞分模式（每局固定 360 只异兽）。冲刺 S 级综合评分！'));
     var r1 = el('p', 'help');
     r1.appendChild(el('b', null, '落掌与三档蓄力：'));
-    r1.appendChild(document.createTextNode('轻拍/0.18s 一级短蓄（1.0×）；0.45s 中蓄（1.30×范围 / 1.35×伤害）；0.80s 满蓄（1.50×范围 / 2.20×伤害，破分裂，冷却 0.8s）；内圈命中 ≥3 怪触发正中靶心。'));
+    r1.appendChild(document.createTextNode('点按（0.33s冷却）；按住 0.18s 短蓄（击退+宽靶心）、0.45s 中蓄（1.35×伤，0.42s冷却，60Hz约0.47s触发）、0.80s 满蓄（2.2×伤，0.80s冷却，破分裂）。'));
     var r2 = el('p', 'help');
     r2.appendChild(el('b', null, '神掌清场：'));
     r2.appendChild(document.createTextNode('攒满 30 能量点右下角或右键释神掌，按实际命中敌人数计分（空放 0 分），清场自动加速出兵。'));
@@ -10559,6 +10641,9 @@ button:disabled {
     p._body.appendChild(nodes.startNick.wrap);
     nodes.bestLine = el('p', 'small', '');
     p._body.appendChild(nodes.bestLine);
+    nodes.resetNotice = el('p', 'reset-notice', '');
+    nodes.resetNotice.hidden = true;
+    p._body.appendChild(nodes.resetNotice);
     addBtn(p._actions, '开始', false, onStart);
     addBtn(p._actions, '排行榜', true, function () { openBoard('start'); });
     addBtn(p._actions, '设置', true, function () { renderSettings(); showPanel('settings'); });
@@ -11122,6 +11207,26 @@ button:disabled {
       onboardEl = null;
     }, 9500);
   }
+  var palmBubbleEl = null, palmBubbleTimer = null, palmBubbleShown = false;
+  function hidePalmBubble() {
+    if (palmBubbleEl && palmBubbleEl.parentNode) palmBubbleEl.parentNode.removeChild(palmBubbleEl);
+    palmBubbleEl = null;
+    if (palmBubbleTimer) { clearTimeout(palmBubbleTimer); palmBubbleTimer = null; }
+  }
+  function maybeShowFirstPalmBubble() {
+    if (palmBubbleShown || !game || !game.state || game.state.status !== 'playing') return;
+    if ((game.state.time || 0) > 30) return;
+    if ((game.state.energy || 0) < 30) return;
+    if (bestCache > 0) return;
+    var k = (CONFIG.storagePrefix || 'tianjiang_v28_') + 'palm_bubble_done';
+    try { if (platform.storage.getItem(k) === '1') { palmBubbleShown = true; return; } } catch (e) {}
+    palmBubbleShown = true;
+    try { platform.storage.setItem(k, '1'); } catch (e) {}
+    hidePalmBubble();
+    palmBubbleEl = el('div', 'palm-bubble', '能量已满！点击释放神掌清屏 ↓');
+    document.body.appendChild(palmBubbleEl);
+    palmBubbleTimer = setTimeout(hidePalmBubble, 4000);
+  }
   function onStart() {
     unlockAudio();
     createFresh();
@@ -11233,6 +11338,16 @@ button:disabled {
   function fillBestLine() {
     if (!nodes.bestLine) return;
     nodes.bestLine.textContent = bestCache > 0 ? ('本机最高分 ' + fmt(bestCache)) : '本机还没有最高分';
+    if (nodes.resetNotice) {
+      var hasLegacy = false;
+      if (bestCache === 0 && CONFIG.legacyPrefixes && platform && platform.storage) {
+        for (var li = 0; li < CONFIG.legacyPrefixes.length; li++) {
+          try { if (platform.storage.getItem(CONFIG.legacyPrefixes[li] + CONFIG.keys.leaderboard)) { hasLegacy = true; break; } } catch (e) {}
+        }
+      }
+      nodes.resetNotice.hidden = !(bestCache === 0 && hasLegacy);
+      if (!nodes.resetNotice.hidden) nodes.resetNotice.textContent = 'V2.8 计分与评级已校准，新版本榜单已重置';
+    }
   }
 
   function refreshBest() {
@@ -11312,6 +11427,14 @@ button:disabled {
       addFx({ kind: 'sk_learn', text: p.combo + ' 连杀里程碑 +' + p.bonus, life: 1.0, max: 1.0 });
       if (platform.audio && platform.audio.play) platform.audio.play('levelup', { freq: 720, dur: 0.18 });
     });
+    g.on('masteryUnlock', function (p) {
+      if (!p) return;
+      addFx({ kind: 'sk_learn', text: '【' + p.school + '】' + p.label + '！伤害+15%', life: 1.4, max: 1.4 });
+      if (platform.audio && platform.audio.play) platform.audio.play('levelup', { freq: 780, dur: 0.22 });
+    });
+    g.on('rerollEmpty', function () {
+      toast('暂无更多新候选（未扣次数）', 1.6);
+    });
     g.on('splitSuppressed', function (p) {
       if (!p) return;
       addFx({ kind: 'sk_learn', text: '破分裂 +2 能量', life: 0.65, max: 0.65 });
@@ -11373,6 +11496,7 @@ button:disabled {
         game.step(0.001);
         if (!keepMenu) resolveMenus();
         scanWorld();
+      maybeShowFirstPalmBubble();
         syncOverlay();
       },
       spawnDemo: spawnDemo,
@@ -12195,7 +12319,7 @@ button:disabled {
     }
     var compScore = res.compositeScore != null ? res.compositeScore : (res.score || 0);
     var bd = res.scoreBreakdown || {};
-    var gLetter = bd.grade || (compScore >= 22000 ? 'S' : compScore >= 16500 ? 'A' : compScore >= 12000 ? 'B' : 'C');
+    var gLetter = bd.grade || (compScore >= 21000 ? 'S' : compScore >= 15500 ? 'A' : compScore >= 11000 ? 'B' : 'C');
     var hero = el('div', 'grade-hero');
     hero.appendChild(el('div', 'grade-badge grade-' + gLetter, gLetter));
     var gMeta = el('div', 'grade-meta');
@@ -12380,32 +12504,33 @@ button:disabled {
         if (_head) _head.appendChild(el('span', 'school-boost-tag', '同流派加成'));
       }
     }
-    /* V2.5：卡面一句话精简至 14 字以内，杜绝截断 */
-    var SHORT_CARD_DESC = {
-      A: '落掌概率生成黑洞牵引敌群',
-      B: '黑洞结束触发范围聚爆冲击',
-      C: '黑洞牵引满载引发万掌崩裂',
-      D: '落掌触发多段闪电链连锁电击',
-      E: '命中附加雷印死亡爆裂并传染',
-      F: '雷电连续触发降下天雷轰击',
-      G: '落掌点燃敌人持续灼烧蔓延',
-      H: '灼烧目标受击触发烈焰爆裂',
-      I: '持续灼烧在地面形成烈焰火海',
-      J: '落掌寒气冻结敌人并减速控场',
-      K: '冻结目标受击升起范围冰棱刺',
-      L: '寒冰扩散形成极寒领域冰封敌潮',
-      M: '神掌释放后追加金色掌印残影',
-      N: '神掌余震扩大并联动追击敌群',
-      O: '神掌爆发降临重创精英与重甲',
-      P: '落掌后原位生成延迟残影追击',
-      Q: '落掌震裂地面引发持续余震',
-      R: '敌群密集时落掌自动追加反击',
-      S: '掌风向外回旋扫荡周围敌人'
+    /* V2.8 UI：卡面随等级动态显示下一级具体数值变化（≤16字） */
+    var DYN_CARD_DESC = {
+      A: ['命中15%生成黑洞吸怪', '概率15%→28%，增碰撞冲击波', '概率28%→45%，结束弹射易伤'],
+      B: ['黑洞结束触发范围聚爆', '聚爆范围扩大并提升伤害', '聚爆引发二次连环冲击波'],
+      C: ['黑洞满载触发万掌崩裂', '崩裂伤害提升并扩大波及', '崩裂追加全屏震荡清场'],
+      D: ['落掌触发3目标闪电链', '跳数3→5目标，连锁增强', '跳数5→7目标并末端分叉'],
+      E: ['命中挂雷印，死亡爆裂传染', '爆裂范围扩大，传染2敌', '雷印爆裂追加回流电弧'],
+      F: ['雷电连击召唤天雷轰击', '天雷范围扩大并降触发门槛', '天雷追加连锁落雷轰炸'],
+      G: ['落掌点燃敌人持续灼烧', '灼烧伤害提升并向周围蔓延', '灼烧扩散加速且持续延长'],
+      H: ['灼烧目标受击触发烈焰爆', '爆裂范围扩大并连锁引爆', '烈焰爆裂留下高伤余烬'],
+      I: ['灼烧地面生成烈焰火海', '火海范围扩大并提升灼伤', '火海持续延长且中心爆发'],
+      J: ['落掌寒气冻结减速控场', '冻结时长延长并扩大范围', '深度冰封受击触发碎冰爆'],
+      K: ['冻结受击升起范围冰棱刺', '冰棱数量与伤害大幅提升', '冰棱触发连锁冰爆清场'],
+      L: ['寒冰扩散形成极寒领域', '领域减速与冰冻概率提升', '极寒领域周期性冰封全圈'],
+      M: ['神掌后原位追加金色残影', '残影自动追击附近敌人', '三道掌影连环追击并震荡'],
+      N: ['神掌余震扩大并联动追击', '余震范围与回能效率提升', '余震复制已学流派核心技'],
+      O: ['神掌降临重创精英与重甲', '对精英/重甲额外增伤爆发', '神掌击杀精英触发全屏余波'],
+      P: ['落掌0.25s后补残影追击', '残影自动寻敌追击附近怪', '残影命中附带范围冲击击退'],
+      Q: ['落掌震裂地面引发余震', '裂地延伸并提升余震伤害', '裂地触发炽热地刺连环爆发'],
+      R: ['敌群密集时落掌追加反击', '触发门槛降低，反击更频繁', '反击附带强力震退清围'],
+      S: ['掌风向外回旋扫荡敌群', '回旋范围扩大并附加牵引', '回旋分裂双掌风往返聚怪']
     };
-    var maxC = (CONFIG.skills && CONFIG.skills.cardDescMaxChars) || 14;
-    var mainTxt = SHORT_CARD_DESC[ch.id] || ch.nextMechanic || ch.rankDesc || ch.description || ch.desc || '';
-    if (mainTxt.length > maxC) mainTxt = mainTxt.slice(0, maxC);
-    var _rkLbl = 'Lv.' + (ch.nextRank || ch.rank || 1) + '：';
+    var _nr = Math.max(1, Math.min(3, (ch.nextRank || ch.rank || 1)));
+    var _arrD = DYN_CARD_DESC[ch.id];
+    var mainTxt = (_arrD && _arrD[_nr - 1]) ? _arrD[_nr - 1] : (ch.nextMechanic || ch.rankDesc || ch.description || '');
+    if (mainTxt.length > 16) mainTxt = mainTxt.slice(0, 16);
+    var _rkLbl = _nr === 1 ? '→Lv.1：' : ('Lv.' + (_nr - 1) + '→Lv.' + _nr + '：');
     b.appendChild(el('span', 'desc', _rkLbl + mainTxt));
     if (ch.prerequisiteText && ch.prerequisiteText !== '无') {
       b.appendChild(el('span', 'skill-prereq-mini', '前置：' + ch.prerequisiteText));
@@ -12499,6 +12624,7 @@ button:disabled {
   }
 
   function tryUlt() {
+    hidePalmBubble();
     if (!canAct()) return false;
     /* V1.3 §8.4：能量 ≥ 30 即可释放；判定以引擎 canUseUltimate 为准。 */
     var can = game.canUseUltimate ? game.canUseUltimate() : (game.state.energy >= (CONFIG.energy.cost || 30) - CONFIG.time.eps);
@@ -15177,14 +15303,40 @@ button:disabled {
       var rank = map[list[i].id] || 0;
       if (rank > 0) owned.push({ name: list[i].name, rank: rank, schoolKey: schoolKeyOf(list[i]), icon: skillIconOf(list[i]) });
     }
-    var maxW = (ULT.x - ULT.r - 20) - 16;
+    var startX = 16;
+    if (game && game.getSchoolMasteryMap) {
+      var mpHud = game.getSchoolMasteryMap();
+      var baseYM = PB + L.skillTop + 6;
+      for (var mkH in mpHud) {
+        if (!Object.prototype.hasOwnProperty.call(mpHud, mkH)) continue;
+        var mInfo = mpHud[mkH];
+        var mbw = 76, mbh = 54;
+        roundRect(startX, baseYM, mbw, mbh, 12, mInfo.tier >= 2 ? 'rgba(255, 196, 61, 0.28)' : 'rgba(255, 209, 102, 0.16)');
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(startX + 1, baseYM + 1, mbw - 2, mbh - 2, 11) : ctx.rect(startX + 1, baseYM + 1, mbw - 2, mbh - 2);
+        ctx.stroke();
+        ctx.fillStyle = '#ffd166';
+        ctx.font = font(15, 900);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(mInfo.school.slice(0, 2), startX + mbw / 2, baseYM + 19);
+        ctx.fillStyle = '#fff5cc';
+        ctx.font = font(13, 800);
+        ctx.fillText(mInfo.label.slice(2), startX + mbw / 2, baseYM + 39);
+        startX += mbw + 8;
+        break; /* 紧凑展示主激活流派徽章 */
+      }
+    }
+    var maxW = (ULT.x - ULT.r - 20) - startX;
     var bw = 54, bh = 54, gap = 8;
     var maxSlots = Math.max(4, Math.floor((maxW + gap) / (bw + gap)));
     var show = owned.length > maxSlots ? maxSlots - 1 : owned.length;
     var baseY = PB + L.skillTop + 6;
     ctx.textBaseline = 'middle';
     for (i = 0; i < show; i++) {
-      var bx = 16 + i * (bw + gap);
+      var bx = startX + i * (bw + gap);
       var meta = SCHOOL_META[owned[i].schoolKey] || SCHOOL_META.general;
       roundRect(bx, baseY, bw, bh, 12, 'rgba(20, 36, 56, 0.94)');
       ctx.strokeStyle = meta.color;
@@ -15202,7 +15354,7 @@ button:disabled {
       mark('技能标签', bx, baseY, bw, bh);
     }
     if (owned.length > show) {
-      var mx = 16 + show * (bw + gap);
+      var mx = startX + show * (bw + gap);
       roundRect(mx, baseY, bw, bh, 12, 'rgba(26, 44, 68, 0.95)');
       ctx.fillStyle = '#d5e4f2';
       ctx.font = font(20, 900);
